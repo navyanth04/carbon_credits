@@ -20,6 +20,7 @@ const signupSchema: ZodSchema = z.object({
 });
 
 // Signup route – every new user will have role "EMPLOYEE"
+
 router.post('/signup', async (req: Request, res: Response): Promise<any>=> {
   const parseResult = signupSchema.safeParse(req.body);
   if (!parseResult.success) {
