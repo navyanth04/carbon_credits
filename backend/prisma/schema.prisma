@@ -64,22 +64,35 @@ model Employer {
 }
 
 model Trip {
-  id            Int         @id @default(autoincrement())
-  user          User        @relation(fields: [userId], references: [id])
-  userId        Int
-  startLocation String
-  endLocation   String
-  // The distance actually traveled (for record-keeping)
-  distance      Float
+  id             Int         @id @default(autoincrement())
+  user           User        @relation(fields: [userId], references: [id])
+  userId         Int
+  startLocation  String
+  endLocation    String
+  // Precise coordinates for the start of the trip
+  startLatitude  Float
+  startLongitude Float
+  // Precise coordinates for the end of the trip; optional until the trip is completed
+  endLatitude    Float?
+  endLongitude   Float?
+  // The distance actually traveled (for record-keeping) in meters
+  distance       Float
   // The miles not driven (or saved) because of alternative transport
-  milesSaved    Float
+  milesSaved     Float
   // The method used determines how many points are earned per mile
-  method        TripMethod
+  method         TripMethod
   // Date/time of the trip
-  date          DateTime    @default(now())
+  date           DateTime    @default(now())
   // Points earned for this trip (based on method and miles saved)
-  points        Float
+  points         Float
+  // Maximum speed recorded during this trip (e.g., in m/s or converted to MPH as preferred)
+  maxSpeed       Float?
+  // Duration of the trip in seconds
+  duration       Int
+  // Average speed over the trip (could be in m/s; conversion to MPH can be done when displaying)
+  averageSpeed   Float?
 }
+
 
 model Trade {
   id             Int         @id @default(autoincrement())

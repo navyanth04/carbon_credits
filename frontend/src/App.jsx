@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import TripDetailsPage from './pages/TripDetailsPage';
 import HelpPage from './pages/HelpPage';
 import JourneyTracker from './pages/JourneyTracker';
+import MyTripsPage from './pages/MyTripsPage';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/trip-details" element={<TripDetailsPage />} />
         <Route path="/journey-tracker" element={<JourneyTracker/>}/>
+        <Route path="/my-trips" element={<MyTripsPage />} />
       </Routes>
     </Router>
   );
