@@ -7,36 +7,34 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const SignupPage = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [err,setErr]=useState(false);
-  const navigate=useNavigate();
+  const [firstName, setFirstName]     = useState('');
+  const [lastName, setLastName]       = useState('');
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
+  const [err, setErr]                 = useState(false);
+  const navigate                      = useNavigate();
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response=await axios.post('http://localhost:3000/api/v1/user/signup',{
-        firstName,lastName,email,password
-      })
-
+      const response = await axios.post('http://localhost:3000/api/v1/auth/signup', {
+        firstName, lastName, email, password
+      });
       const token = response.data.token;
       localStorage.setItem('authToken', token);
       setErr(false);
-      navigate('/employee-dashboard');
+      navigate('/login');
     } catch (error) {
       console.log(error);
       setErr(true);
     }
-    console.log({ firstName, lastName, email, password });
   };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Sign Up
+          Sign Up as Employee
         </h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
@@ -77,20 +75,27 @@ const SignupPage = () => {
           >
             Sign Up
           </Button>
-          {err ? (
+          {err && (
             <div
               className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2"
               role="alert"
             >
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">Enter valid credentials.</span>
+              <strong className="font-bold">Error:</strong>
+              <span className="block sm:inline"> Enter valid credentials.</span>
             </div>
-          ) : null}
+          )}
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/login" className="text-blue-600 hover:underline">
             Log in
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Or sign up as an{' '}
+          <Link to="/employer-signup" className="text-indigo-600 hover:underline">
+            Employer
           </Link>
         </p>
       </div>

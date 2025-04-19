@@ -2,32 +2,40 @@
 import React, { useState } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [err, setErr]=useState(false)
-  const navigate=useNavigate();
+  const [errMsg, setErrMsg]     = useState('');
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const navigate                = useNavigate();
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrMsg('');
     try {
-      const response=await axios.post('http://localhost:3000/api/v1/user/login',{
-        email,password
-      })
-
+      const response = await axios.post('http://localhost:3000/api/v1/auth/login', {
+        email, password
+      });
       const token = response.data.token;
       localStorage.setItem('authToken', token);
-      setErr(false);
-      navigate('/employee-dashboard');
+      navigate(
+        response.data.role === 'ADMIN'
+          ? '/admin'
+          : response.data.role === 'EMPLOYER'
+            ? '/employer-dashboard'
+            : '/employee-dashboard'
+      );
     } catch (error) {
-      console.log(error);
-      setErr(true);
+      console.error(error);
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        setErrMsg(error.response.data.message);
+      } else {
+        setErrMsg('An unexpected error occurred. Please try again.');
+      }
     }
-    console.log({ email, password });
   };
 
   return (
@@ -59,23 +67,55 @@ const LoginPage = () => {
           >
             Login
           </Button>
-          {err ? (
+          {errMsg && (
             <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2"
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4"
               role="alert"
             >
               <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">Enter valid credentials.</span>
+              <span className="block sm:inline">{errMsg}</span>
             </div>
-          ) : null}
+          )}
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-blue-600 hover:underline">
+          Don’t have an account?{' '}
+          <button
+            onClick={() => setShowSignupModal(true)}
+            className="text-blue-600 hover:underline focus:outline-none"
+          >
             Sign up
-          </Link>
+          </button>
         </p>
       </div>
+
+      {showSignupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full relative">
+            <button
+              onClick={() => setShowSignupModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl leading-none"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Sign Up As
+            </h2>
+            <div className="flex flex-col space-y-4">
+              <Link to="/signup">
+                <Button className="w-full bg-green-600 text-white hover:bg-green-700">
+                  Employee
+                </Button>
+              </Link>
+              <Link to="/employer-signup">
+                <Button className="w-full bg-indigo-600 text-white hover:bg-indigo-700">
+                  Employer
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

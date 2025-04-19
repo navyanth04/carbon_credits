@@ -42,6 +42,7 @@ model User {
   firstName  String
   lastName   String
   role       Role
+  approved    Boolean   @default(false)
   createdAt  DateTime  @default(now())
   // For employees, reference their employer if applicable
   employerId Int?
@@ -51,17 +52,25 @@ model User {
 }
 
 model Employer {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  approved  Boolean   @default(false)  // Approved by the carbon credit bank
-  createdAt DateTime  @default(now())
-  // One employer can have many employees
-  employees User[]
-  // For credit trading, an employer can be involved in trades in two roles:
-  tradesFrom Trade[]   @relation("TradeFrom")
-  tradesTo   Trade[]   @relation("TradeTo")
+  id           Int       @id @default(autoincrement())
+  // Company identity
+  name         String    @unique
+  email        String    @unique    // used for employer login
+  password     String                  // you’ll need this if employers sign in
+  approved     Boolean   @default(false)  // admin must flip to “true” before they can log in/use
+  createdAt    DateTime  @default(now())
+  
+  // Optional extra fields
+  address      String?                 // company address
+  phone        String?                 // contact number
+  contactName  String?                 // primary contact person
+  
+  // Relations
+  employees    User[]     // all your EMPLOYEE users belong to this employer
+  tradesFrom   Trade[]    @relation("TradeFrom")
+  tradesTo     Trade[]    @relation("TradeTo")
 }
+
 
 model Trip {
   id             Int         @id @default(autoincrement())
