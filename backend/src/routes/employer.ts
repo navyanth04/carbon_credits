@@ -164,33 +164,39 @@ router.get('/employees', async (req: CustomRequest, res: Response): Promise<any>
 });
 
 // POST /api/v1/employer/employees/:id/approve
-  router.post('/employees/:id/approve', async (req: CustomRequest, res: Response): Promise<any>=> {
-    const orgId = Number(req.params.id);
-  
+// POST /api/v1/employer/employees/:id/approve
+router.post('/employees/:id/approve',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+    const employeeId = Number(req.params.id);
+
+    // (Optional) verify that req.email’s user is an employer and owns this employee:
+    const me = await prisma.user.findUnique({
+      where: { email: req.email },
+      include: { employer: true }
+    });
+    if (!me || me.role !== Role.EMPLOYER || me.employerId == null) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    // ensure the target actually belongs to your org
+    const target = await prisma.user.findUnique({ where: { id: employeeId } });
+    if (!target || target.employerId !== me.employerId) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
     try {
-      // 1) Approve the Employer row
-      await prisma.employer.update({
-        where: { id: orgId },
+      // **Only** approve that single user:
+      await prisma.user.update({
+        where: { id: employeeId },
         data: { approved: true },
       });
-  
-      // 2) Approve the matching User row (role=EMPLOYER & employerId=orgId)
-      await prisma.user.updateMany({
-        where: {
-          role:       Role.EMPLOYER,
-          employerId: orgId,
-        },
-        data: {
-          approved: true,
-        },
-      });
-  
-      return res.json({ message: 'Employer and its user account approved' });
+
+      return res.json({ message: 'Employee approved' });
     } catch (err) {
-      console.error('Error approving employer:', err);
+      console.error('Error approving employee:', err);
       return res.status(500).json({ message: 'Server error' });
     }
-  });
+  }
+);
+
 
 
 
