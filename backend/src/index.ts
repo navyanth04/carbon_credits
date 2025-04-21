@@ -7,7 +7,9 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://carbon-credits-backend.vercel.app'
+}));
 app.use(express.json());
 app.use('/api/v1', rootRouter);
 
