@@ -13,9 +13,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script',        // will inject the registration snippet into your index.html
       includeAssets: [
-        'favicon.svg',
-        'robots.txt',
-        'apple-touch-icon.png'
+        '/my-favicon/apple-touch-icon.png',
+        '/my-favicon/favicon-96x96.png',
+        '/my-favicon/favicon.ico',
+        '/my-favicon/favicon.svg',
+        '/my-favicon/web-app-manifest-192x192.png',
+        '/my-favicon/web-app-manifest-512x512.png',
       ],
       manifest: {
         name:             'Carbon Credits Platform',
