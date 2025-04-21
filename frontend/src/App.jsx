@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -15,6 +15,11 @@ import JourneyTracker from './pages/JourneyTracker';
 import MyTripsPage from './pages/MyTripsPage';
 import EmployerSignupPage from './pages/EmployerSignupPage';
 import RequireAuth        from './components/RequireAuth';
+import ApprovedEmployersPage from './pages/admin/ApprovedEmployersPage';
+import EmployerDetailPage from './pages/admin/EmployerDetailPage';
+import AllTripsPage from './pages/admin/AllTripsPage';
+import SettingsPage from './pages/admin/SettingsPage';
+import AdminWithSidebar from './layouts/AdminWithSidebar';
 
 function App() {
   return (
@@ -60,14 +65,14 @@ function App() {
             </RequireAuth>
           }
         />
-        <Route
+        {/* <Route
           path="/admin"
           element={
             <RequireAuth>
               <AdminDashboard />
             </RequireAuth>
           }
-        />
+        /> */}
         <Route
           path="/trip-details"
           element={
@@ -92,6 +97,29 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route path="/admin/*" element={
+          <RequireAuth requiredRole="ADMIN">
+            <AdminWithSidebar>
+              <Outlet />
+            </AdminWithSidebar>
+          </RequireAuth>
+        }>
+          {/* /admin → AdminDashboard */}
+          <Route index                   element={<AdminDashboard />} />
+          {/* /admin/employers → list */}
+          <Route path="employers"        element={<ApprovedEmployersPage />} />
+          {/* /admin/employers/:id → detail */}
+          <Route path="employers/:id"    element={<EmployerDetailPage />} />
+          {/* /admin/trips → all trips */}
+          <Route path="trips"            element={<AllTripsPage />} />
+          {/* /admin/settings → settings */}
+          <Route path="settings"         element={<SettingsPage />} />
+          {/* catch any /admin/... typo back to dashboard */}
+          <Route path="*"                element={<Navigate to="/admin" replace />} />
+        </Route>
+
+
+
         {/* Fallback (optional) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

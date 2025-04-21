@@ -13,54 +13,69 @@ router.use(express.json());
 
 // Signup route – every new user will have role "EMPLOYEE"
 
-const signupSchema: ZodSchema = z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string().email().transform((val) => val.toLowerCase()),
-    password: z.string().min(5),
-  });
-
-router.post('/signup', async (req: Request, res: Response): Promise<any>=> {
-  const parseResult = signupSchema.safeParse(req.body);
-  if (!parseResult.success) {
-    return res.status(400).json({ message: "Incorrect inputs" });
-  }
-  
-  // Destructure only the fields defined in the schema
-  const { email, password, firstName, lastName } = parseResult.data;
-  
-  // Check if a user with this email already exists
-  const userExists = await prisma.user.findFirst({
-    where: { email },
+  const signupSchema: ZodSchema = z.object({
+    firstName:  z.string(),
+    lastName:   z.string(),
+    email:      z.string().email().transform(v => v.toLowerCase()),
+    password:   z.string().min(5),
+    employerId: z.number().int().optional(),  // <-- new
   });
   
-  if (userExists) {
-    return res.status(409).json({ message: "Email already taken" });
-  }
-
-  try {
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password,
-        firstName,
-        lastName,
-        role: "EMPLOYEE",  // Set the role explicitly to EMPLOYEE
-      },
-    });
-    
-    if (!process.env.JWT_PASSWORD) {
-      return res.status(500).json({ message: "JWT secret is not defined" });
+  router.post('/signup', async (req: Request, res: Response): Promise<any> => {
+    const parsed = signupSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Incorrect inputs", errors: parsed.error.format() });
     }
-    
-    const token = jwt.sign({ email }, process.env.JWT_PASSWORD);
-    const level = 0; // Since every user is an EMPLOYEE
-    
-    return res.status(201).json({ message: "EMPLOYEE created successfully", token, level });
-  } catch (error) {
-    return res.status(500).json({ message: "Error creating user" });
-  }
-});
+  
+    const { firstName, lastName, email, password, employerId } = parsed.data;
+  
+    // 1) Prevent duplicate emails
+    const userExists = await prisma.user.findUnique({ where: { email }});
+    if (userExists) {
+      return res.status(409).json({ message: "Email already taken" });
+    }
+  
+    // 2) If they supplied an employerId, make sure that org exists & is approved
+    if (employerId !== undefined) {
+      const org = await prisma.employer.findUnique({
+        where: { id: employerId, approved: true }
+      });
+      if (!org) {
+        return res.status(400).json({ message: "Invalid or unapproved employer" });
+      }
+    }
+  
+    try {
+      // 3) Create the User, linking employerId if present
+      const newUser = await prisma.user.create({
+        data: {
+          firstName,
+          lastName,
+          email,
+          password,
+          role:       Role.EMPLOYEE,
+          approved:   true,           // or false if you want admin to manually approve employees
+          employerId,                 // undefined => null in the DB
+        },
+      });
+  
+      // 4) Issue JWT
+      const secret = process.env.JWT_PASSWORD;
+      if (!secret) {
+        return res.status(500).json({ message: "JWT secret is not defined" });
+      }
+      const token = jwt.sign({ email, role: newUser.role }, secret);
+  
+      return res.status(201).json({
+        message: "EMPLOYEE created successfully",
+        token,
+        level: 0,
+      });
+    } catch (err) {
+      console.error("Error creating user:", err);
+      return res.status(500).json({ message: "Error creating user" });
+    }
+  });
 
 // Schema for signin – again using email and password only
 const signinSchema: ZodSchema = z.object({
@@ -80,6 +95,7 @@ const signinSchema: ZodSchema = z.object({
     const user = await prisma.user.findFirst({
       where: { email, password },
     });
+    
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -121,19 +137,27 @@ interface CustomRequest extends Request {
   email?: string;
 }
 
-// Auth route – returns the level (always 0 since role is EMPLOYEE)
+// Auth route
 router.get('/auth', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
   // authMiddleware should attach the email property to req
-  const userDB = await prisma.user.findFirst({
-    where: { email: req.email },
+  const user = await prisma.user.findUnique({
+    where: { email: req.email }
   });
-  
-  if (!userDB) {
-    return res.status(404).json({ message: "User not found" });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
   }
-  
-  const level = 0;
-  return res.status(200).json({ level });
+
+  // map roles to levels
+  const levelMap = {
+    [Role.EMPLOYEE]: 0,
+    [Role.EMPLOYER]: 1,
+    [Role.ADMIN]:    2,
+  };
+
+  return res.status(200).json({
+    role:  user.role,          // "EMPLOYEE" | "EMPLOYER" | "ADMIN"
+    level: levelMap[user.role]
+  });
 });
 
 export default router;

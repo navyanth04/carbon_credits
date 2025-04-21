@@ -1,7 +1,9 @@
-// JourneyTracker.jsx
+// src/pages/JourneyTracker.jsx
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { inferMode, computeEmissions, computeCredits } from '../utils/carbonCalculator';
+import EmployeeNavbar from '../components/EmployeeNavbar';
 
 const JourneyTracker = () => {
   const [tracking, setTracking] = useState(false);
@@ -15,7 +17,11 @@ const JourneyTracker = () => {
   const [maxSpeed, setMaxSpeed] = useState(0); // In m/s
   const [startTime, setStartTime] = useState(null); // Start time in milliseconds
   const [submissionStatus, setSubmissionStatus] = useState(''); // To display submit status
-  
+
+  // Additional state for computed duration and average speed
+  const [duration, setDuration] = useState(0); // in seconds
+  const [averageSpeed, setAverageSpeed] = useState(0); // in m/s
+
   // Conversion functions
   const mpsToMph = (mps) => mps * 2.23694;
   const metersToMiles = (meters) => meters / 1609.34;
@@ -28,9 +34,9 @@ const JourneyTracker = () => {
     const lat2Rad = toRad(lat2);
     const deltaLat = toRad(lat2 - lat1);
     const deltaLon = toRad(lon2 - lon1);
-    const a = Math.sin(deltaLat / 2) ** 2 +
-              Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-              Math.sin(deltaLon / 2) ** 2;
+    const a =
+      Math.sin(deltaLat / 2) ** 2 +
+      Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -43,7 +49,7 @@ const JourneyTracker = () => {
       const data = await response.json();
       return data.display_name || 'Address not found';
     } catch (error) {
-      console.error("Reverse geocoding error:", error);
+      console.error('Reverse geocoding error:', error);
       return 'Error retrieving address';
     }
   };
@@ -60,7 +66,7 @@ const JourneyTracker = () => {
       setMaxSpeed(0);
       setSubmissionStatus('');
       setStartTime(Date.now());
-      
+
       const id = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, speed: currentSpeed } = position.coords;
@@ -68,15 +74,17 @@ const JourneyTracker = () => {
           const measuredSpeed = currentSpeed || 0;
           setSpeed(measuredSpeed);
           // Update maxSpeed if current speed is higher
-          setMaxSpeed(prevMax => measuredSpeed > prevMax ? measuredSpeed : prevMax);
-          
+          setMaxSpeed((prevMax) => (measuredSpeed > prevMax ? measuredSpeed : prevMax));
+
           // Update positions array and calculate added distance
           setPositions((prevPositions) => {
             if (prevPositions.length > 0) {
               const lastPosition = prevPositions[prevPositions.length - 1];
               const addedDistance = haversineDistance(
-                lastPosition.lat, lastPosition.lng,
-                newPosition.lat, newPosition.lng
+                lastPosition.lat,
+                lastPosition.lng,
+                newPosition.lat,
+                newPosition.lng
               );
               setTotalDistance((prevDistance) => prevDistance + addedDistance);
             }
@@ -102,7 +110,7 @@ const JourneyTracker = () => {
       setWatchId(null);
       setTracking(false);
       setJourneyEnded(true);
-      
+
       let computedDuration = 0;
       let computedAvgSpeed = 0;
       if (startTime) {
@@ -111,7 +119,7 @@ const JourneyTracker = () => {
           computedAvgSpeed = totalDistance / computedDuration; // in m/s
         }
       }
-      
+
       if (positions.length > 0) {
         const startPos = positions[0];
         const endPos = positions[positions.length - 1];
@@ -121,20 +129,12 @@ const JourneyTracker = () => {
         const fetchedEndAddress = await getAddress(endPos.lat, endPos.lng);
         setStartAddress(fetchedStartAddress);
         setEndAddress(fetchedEndAddress);
-
-        // Optionally, you could automatically submit the trip data here
-        // or display a separate "Submit Trip" button.
       }
-      
-      // You might want to save computed duration and average speed in state if needed
+
       setDuration(computedDuration);
       setAverageSpeed(computedAvgSpeed);
     }
   };
-
-  // Additional state for computed duration and average speed
-  const [duration, setDuration] = useState(0); // in seconds
-  const [averageSpeed, setAverageSpeed] = useState(0); // in m/s
 
   // Define markers for start and current positions
   const startMarker = positions.length > 0 ? positions[0] : null;
@@ -142,11 +142,16 @@ const JourneyTracker = () => {
 
   // Function to submit trip data to the backend
   const submitTrip = async () => {
-    // Prepare the trip data object
     if (!startMarker || !currentMarker) {
-      alert("Insufficient position data to submit trip.");
+      alert('Insufficient position data to submit trip.');
       return;
     }
+
+    // infer transport mode and compute emissions & credits
+    const transportMode = inferMode(maxSpeed);
+    const emissions = computeEmissions(totalDistance, transportMode);
+    const credits = computeCredits(totalDistance, transportMode);
+
     const tripData = {
       startLocation: startAddress,
       endLocation: endAddress,
@@ -155,13 +160,13 @@ const JourneyTracker = () => {
       endLatitude: currentMarker.lat,
       endLongitude: currentMarker.lng,
       distance: totalDistance,
-      milesSaved: 0, // Set as 0 or compute accordingly if you have that data
-      method: "CARPOOLING", // Default method; you can modify or allow user selection
-      // Date can be omitted since backend defaults to now
-      points: 0, // Set as 0 or compute based on your logic
+      milesSaved: 0, // Set as 0 or compute accordingly
+      credits: credits,
       maxSpeed: maxSpeed,
-      duration: duration,
+      duration: Math.round(duration),
       averageSpeed: averageSpeed,
+      transportMode: transportMode,
+      emissions: emissions,
     };
 
     try {
@@ -169,26 +174,25 @@ const JourneyTracker = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify(tripData),
       });
       if (response.ok) {
-        const data = await response.json();
-        setSubmissionStatus("Trip submitted successfully!");
-        console.log("Trip submitted:", data.trip);
+        setSubmissionStatus('Trip submitted successfully!');
       } else {
-        setSubmissionStatus("Failed to submit trip.");
-        console.error("Submission error:", response.statusText);
+        setSubmissionStatus('Failed to submit trip.');
+        console.error('Submission error:', response.statusText);
       }
     } catch (error) {
-      setSubmissionStatus("Error submitting trip.");
-      console.error("Error:", error);
+      setSubmissionStatus('Error submitting trip.');
+      console.error('Error:', error);
     }
   };
 
   return (
     <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
+      <EmployeeNavbar/>
       <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-800">
         Journey Tracker
       </h1>
@@ -233,10 +237,10 @@ const JourneyTracker = () => {
         <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg mb-6">
           <h2 className="text-2xl font-bold text-gray-700 mb-4">Trip Summary</h2>
           <p className="text-lg text-gray-600">
-            <span className="font-semibold">Total Distance Traveled:</span> {metersToMiles(totalDistance).toFixed(2)} miles
+            <span className="font-semibold">Total Distance:</span> {metersToMiles(totalDistance).toFixed(2)} miles
           </p>
           <p className="text-lg text-gray-600">
-            <span className="font-semibold">Last Recorded Speed:</span> {speed ? mpsToMph(speed).toFixed(2) : 0} MPH
+            <span className="font-semibold">Last Speed:</span> {speed ? mpsToMph(speed).toFixed(2) : 0} MPH
           </p>
           <p className="text-lg text-gray-600">
             <span className="font-semibold">Max Speed:</span> {maxSpeed ? mpsToMph(maxSpeed).toFixed(2) : 0} MPH

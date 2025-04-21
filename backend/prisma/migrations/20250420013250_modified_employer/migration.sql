@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Employer" ADD COLUMN     "credits" DOUBLE PRECISION NOT NULL DEFAULT 0;

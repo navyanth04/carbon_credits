@@ -33,6 +33,15 @@ enum TradeStatus {
   REJECTED
 }
 
+enum TransportMode {
+  WALKING
+  BIKING
+  BUS
+  RAIL
+  CAR
+  RIDESHARE
+}
+
 // Models
 
 model User {
@@ -47,8 +56,12 @@ model User {
   // For employees, reference their employer if applicable
   employerId Int?
   employer   Employer? @relation(fields: [employerId], references: [id])
+
+  credits     Float      @default(0)
+
   // Each employee will have many Trips registered
   trips      Trip[]
+  @@index([employerId])
 }
 
 model Employer {
@@ -59,6 +72,8 @@ model Employer {
   password     String                  // you’ll need this if employers sign in
   approved     Boolean   @default(false)  // admin must flip to “true” before they can log in/use
   createdAt    DateTime  @default(now())
+
+  credits      Float     @default(0)
   
   // Optional extra fields
   address      String?                 // company address
@@ -88,18 +103,20 @@ model Trip {
   distance       Float
   // The miles not driven (or saved) because of alternative transport
   milesSaved     Float
-  // The method used determines how many points are earned per mile
-  method         TripMethod
+  // The transportMode used determines how many points are earned per mile
+  transportMode  TransportMode  @default(CAR)
   // Date/time of the trip
   date           DateTime    @default(now())
   // Points earned for this trip (based on method and miles saved)
-  points         Float
+  credits        Float       @default(0.0)
   // Maximum speed recorded during this trip (e.g., in m/s or converted to MPH as preferred)
   maxSpeed       Float?
   // Duration of the trip in seconds
   duration       Int
   // Average speed over the trip (could be in m/s; conversion to MPH can be done when displaying)
   averageSpeed   Float?
+  emmissions     Float        @default(0.0)
+  @@index([userId, date])
 }
 
 
