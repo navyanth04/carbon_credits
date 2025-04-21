@@ -16,7 +16,7 @@ const LoginPage = () => {
     e.preventDefault();
     setErrMsg('');
     try {
-      const response = await axios.post('https://carbon-credits-backend.vercel.app/api/v1/auth/login', {
+      const response = await axios.post('https://carbon-credits-backend.onrender.com/api/v1/auth/login', {
         email, password
       });
       const token = response.data.token;

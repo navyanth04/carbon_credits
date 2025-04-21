@@ -18,7 +18,7 @@ const SignupPage = () => {
 
   // Fetch approved employers on mount
   useEffect(() => {
-    axios.get('https://carbon-credits-backend.vercel.app/api/v1/employer/list')
+    axios.get('https://carbon-credits-backend.onrender.com/api/v1/employer/list')
       .then(res => {
         setEmployers(res.data.employers);
       })
@@ -39,7 +39,7 @@ const SignupPage = () => {
     }
 
     try {
-      await axios.post('https://carbon-credits-backend.vercel.app/api/v1/auth/signup', {
+      await axios.post('https://carbon-credits-backend.onrender.com/api/v1/auth/signup', {
         firstName,
         lastName,
         email,

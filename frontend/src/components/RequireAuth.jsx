@@ -19,7 +19,7 @@ export default function RequireAuth({ children, requiredRole }) {
         const token = localStorage.getItem('authToken');
         if (!token) throw new Error('No token');
 
-        const res = await fetch('https://carbon-credits-backend.vercel.app/api/v1/auth/auth', {
+        const res = await fetch('https://carbon-credits-backend.onrender.com/api/v1/auth/auth', {
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
