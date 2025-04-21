@@ -20,17 +20,21 @@ import EmployerDetailPage from './pages/admin/EmployerDetailPage';
 import AllTripsPage from './pages/admin/AllTripsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminWithSidebar from './layouts/AdminWithSidebar';
+import RedirectIfAuthenticated from './components/RedirectIfAuthenticated';
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route element={<RedirectIfAuthenticated/>}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/employer-signup" element={<EmployerSignupPage/>}/>
+        </Route>
         <Route path="/help" element={<HelpPage />} />
-        <Route path="/employer-signup" element={<EmployerSignupPage/>}/>
+
 
         {/* Protected Routes (which may later require authentication guards) */}
         <Route
@@ -44,7 +48,7 @@ function App() {
         <Route
           path="/employer-dashboard"
           element={
-            <RequireAuth>
+            <RequireAuth requiredRole={"EMPLOYER"}>
               <EmployerDashboard />
             </RequireAuth>
           }

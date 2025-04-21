@@ -30,8 +30,8 @@ export default function ApprovedEmployersPage() {
   if (error)   return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
-    <div>
-      <h2 className="text-2xl mb-4">Approved Employers</h2>
+    <div className='m-4'>
+      <h2 className="text-2xl mb-4 text-center">Approved Employers</h2>
       <div className="overflow-x-auto bg-white rounded shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

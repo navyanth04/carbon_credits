@@ -54,7 +54,7 @@ router.use(express.json());
           email,
           password,
           role:       Role.EMPLOYEE,
-          approved:   true,           // or false if you want admin to manually approve employees
+          approved:   false,           // or false if you want admin to manually approve employees
           employerId,                 // undefined => null in the DB
         },
       });

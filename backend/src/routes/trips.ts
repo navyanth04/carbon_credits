@@ -108,22 +108,49 @@ interface CustomRequest extends Request {
   email?: string;
 }
 
-router.get('/trips', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-  if (!req.email) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  try {
-    // Query trips where the related user has the authenticated email.
-    // Adjust ordering and selection as needed.
-    const trips = await prisma.trip.findMany({
-      where: { user: { email: req.email } },
-      orderBy: { date: 'desc' },
-    });
-    return res.status(200).json({ trips });
-  } catch (error) {
-    console.error("Error retrieving trips:", error);
-    return res.status(500).json({ message: "Error retrieving trips" });
-  }
-});
+// GET /api/v1/employer/trips
+router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      // 1) Must be logged in
+      if (!req.email) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+  
+      // 2) Look up the current user
+      const me = await prisma.user.findUnique({
+        where: { email: req.email },
+      });
+      if (!me) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // 3) Only employers can hit this
+    //   if (me.role !== 'EMPLOYER' || !me.employerId) {
+    //     return res.status(403).json({ message: 'Forbidden' });
+    //   }
+  
+      try {
+        // 4) Fetch all trips whose user.employerId === me.employerId
+        const trips = await prisma.trip.findMany({
+          where: {
+            user: {
+              employerId: me.employerId,
+            },
+          },
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true, email: true },
+            },
+          },
+          orderBy: { date: 'desc' },
+        });
+  
+        return res.status(200).json({ trips });
+      } catch (error) {
+        console.error('Error retrieving employer trips:', error);
+        return res.status(500).json({ message: 'Error retrieving trips' });
+      }
+    }
+  );
+  
 
 export default router;

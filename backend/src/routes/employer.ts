@@ -164,7 +164,7 @@ router.get('/employees', async (req: CustomRequest, res: Response): Promise<any>
 });
 
 // POST /api/v1/employer/employees/:id/approve
-  router.post('/employers/:id/approve', async (req: CustomRequest, res: Response): Promise<any>=> {
+  router.post('/employees/:id/approve', async (req: CustomRequest, res: Response): Promise<any>=> {
     const orgId = Number(req.params.id);
   
     try {

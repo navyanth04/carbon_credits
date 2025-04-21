@@ -1,5 +1,6 @@
 // src/pages/MyTripsPage.jsx
 import React, { useState, useEffect } from 'react';
+import EmployeeNavbar from '../components/EmployeeNavbar';
 
 const MyTripsPage = () => {
   const [trips, setTrips]     = useState([]);
@@ -34,7 +35,8 @@ const MyTripsPage = () => {
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6 text-center">My Trips</h1>
+      <EmployeeNavbar/>
+      <h1 className="text-3xl mt-8 font-bold mb-6 text-center">My Trips</h1>
       {trips.length === 0 ? (
         <p className="text-center text-gray-600">No trips found.</p>
       ) : (

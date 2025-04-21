@@ -191,9 +191,9 @@ const JourneyTracker = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
+    <div className=" mx-auto p-6 bg-gray-100 min-h-screen">
       <EmployeeNavbar/>
-      <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-800">
+      <h1 className="text-4xl mt-8 font-extrabold text-center mb-6 text-gray-800">
         Journey Tracker
       </h1>
 

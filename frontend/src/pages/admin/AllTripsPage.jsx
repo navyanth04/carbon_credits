@@ -29,7 +29,7 @@ export default function AllTripsPage() {
   if (error)   return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="overflow-x-auto bg-white rounded shadow">
+    <div className="overflow-x-auto m-4 bg-white rounded shadow">
       <h2 className="text-2xl p-4 border-b">All Trips</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
