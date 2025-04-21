@@ -15,7 +15,7 @@ export default function RedirectIfAuthenticated() {
         return;
       }
       try {
-        const res = await axios.get('http://localhost:3000/api/v1/auth/auth', {
+        const res = await axios.get('https://carbon-credits-backend.vercel.app/api/v1/auth/auth', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const { level } = res.data;

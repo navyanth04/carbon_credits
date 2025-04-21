@@ -21,8 +21,8 @@ const EmployerDashboard = () => {
     try {
       const token = localStorage.getItem('authToken');
       const [sumRes, empRes] = await Promise.all([
-        axios.get('http://localhost:3000/api/v1/employer/summary',   { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:3000/api/v1/employer/employees', { headers: { Authorization: `Bearer ${token}` } })
+        axios.get('https://carbon-credits-backend.vercel.app/api/v1/employer/summary',   { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('https://carbon-credits-backend.vercel.app/api/v1/employer/employees', { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setSummary(sumRes.data);
       setEmployees(empRes.data.employees || []);
@@ -39,7 +39,7 @@ const EmployerDashboard = () => {
 
   const handleApprove = async (id) => {
     const token = localStorage.getItem('authToken');
-    await axios.post(`http://localhost:3000/api/v1/employer/employees/${id}/approve`, {}, {
+    await axios.post(`https://carbon-credits-backend.vercel.app/api/v1/employer/employees/${id}/approve`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
     fetchData();
@@ -47,7 +47,7 @@ const EmployerDashboard = () => {
 
   const handleReject = async (id) => {
     const token = localStorage.getItem('authToken');
-    await axios.post(`http://localhost:3000/api/v1/employer/employees/${id}/reject`, {}, {
+    await axios.post(`https://carbon-credits-backend.vercel.app/api/v1/employer/employees/${id}/reject`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
     fetchData();

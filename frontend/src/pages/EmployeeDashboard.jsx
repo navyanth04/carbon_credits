@@ -13,7 +13,7 @@ const EmployeeDashboard = () => {
       try {
         const token = localStorage.getItem('authToken');
         const res = await axios.get(
-          'http://localhost:3000/api/v1/trip/trips',
+          'https://carbon-credits-backend.vercel.app/api/v1/trip/trips',
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTrips(res.data.trips);

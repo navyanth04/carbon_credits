@@ -11,10 +11,10 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('authToken');
       const [empRes, tradeRes] = await Promise.all([
-        fetch('http://localhost:3000/api/v1/admin/employers/pending', {
+        fetch('https://carbon-credits-backend.vercel.app/api/v1/admin/employers/pending', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3000/api/v1/admin/trades/pending', {
+        fetch('https://carbon-credits-backend.vercel.app/api/v1/admin/trades/pending', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -37,7 +37,7 @@ const AdminDashboard = () => {
 
   const handleEmployer = async (id, action) => {
     const token = localStorage.getItem('authToken');
-    await fetch(`http://localhost:3000/api/v1/admin/employers/${id}/${action}`, {
+    await fetch(`https://carbon-credits-backend.vercel.app/api/v1/admin/employers/${id}/${action}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
 
   const handleTrade = async (id, action) => {
     const token = localStorage.getItem('authToken');
-    await fetch(`http://localhost:3000/api/v1/admin/trades/${id}/${action}`, {
+    await fetch(`https://carbon-credits-backend.vercel.app/api/v1/admin/trades/${id}/${action}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });

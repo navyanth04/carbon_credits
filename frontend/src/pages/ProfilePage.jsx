@@ -12,7 +12,7 @@ const ProfilePage = () => {
   // Function to fetch profile data from the backend
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/v1/user/profile', {
+      const response = await axios.get('https://carbon-credits-backend.vercel.app/api/v1/user/profile', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
@@ -39,7 +39,7 @@ const ProfilePage = () => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        'http://localhost:3000/api/v1/user/update',
+        'https://carbon-credits-backend.vercel.app/api/v1/user/update',
         { firstName, lastName, email, password },
         {
           headers: {

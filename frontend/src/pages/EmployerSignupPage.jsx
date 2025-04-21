@@ -17,7 +17,7 @@ const EmployerSignupPage = () => {
     setErr('');
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/v1/employer/signup',
+        'https://carbon-credits-backend.vercel.app/api/v1/employer/signup',
         { name, email, password }
       );
       // On success, redirect to employer login

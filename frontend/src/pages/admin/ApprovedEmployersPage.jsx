@@ -12,7 +12,7 @@ export default function ApprovedEmployersPage() {
     async function load() {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get('http://localhost:3000/api/v1/admin/employers/approved', {
+        const res = await axios.get('https://carbon-credits-backend.vercel.app/api/v1/admin/employers/approved', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setEmployers(res.data.employers || []);

@@ -13,7 +13,7 @@ export default function EmployerDetailPage() {
     async function load() {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get(`http://localhost:3000/api/v1/admin/employers/${id}`, {
+        const res = await axios.get(`https://carbon-credits-backend.vercel.app/api/v1/admin/employers/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrg(res.data.employer);

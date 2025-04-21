@@ -11,7 +11,7 @@ const MyTripsPage = () => {
     const fetchTrips = async () => {
       try {
         const token    = localStorage.getItem('authToken');
-        const response = await fetch('http://localhost:3000/api/v1/trip/trips', {
+        const response = await fetch('https://carbon-credits-backend.vercel.app/api/v1/trip/trips', {
           headers: {
             'Content-Type':  'application/json',
             'Authorization': `Bearer ${token}`,
