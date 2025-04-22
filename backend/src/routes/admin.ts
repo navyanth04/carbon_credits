@@ -80,7 +80,7 @@ router.post('/employers/:id/reject', async (req: CustomRequest, res: Response): 
  */
 router.get('/trades/pending', async (req: CustomRequest, res: Response): Promise<any>=> {
   const trades = await prisma.trade.findMany({
-    where: { status: TradeStatus.PENDING },
+    where: { status: (TradeStatus.PENDING_ADMIN || TradeStatus.PENDING_BUYER) },
     orderBy: { tradeDate: 'asc' },
     include: {
       fromEmployer: { select: { id: true, name: true } },
@@ -130,7 +130,7 @@ router.get('/employers/approved', async (req: CustomRequest, res: Response): Pro
         contactName: true,
       },
     });
-    return res.json({ employers });
+    return res.status(200).json({ employers });
   });
   
   /**

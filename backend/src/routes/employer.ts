@@ -221,6 +221,8 @@ router.post('/employees/:id/reject', async (req: CustomRequest, res: Response):P
 
   return res.json({ message: 'Employee rejected' });
 });
+
+
   
 
 export default router;

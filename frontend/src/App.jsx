@@ -21,6 +21,9 @@ import AllTripsPage from './pages/admin/AllTripsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminWithSidebar from './layouts/AdminWithSidebar';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated';
+import NewTrade from './pages/trade/NewTrade';
+import MyTrades from './pages/trade/MyTrades';
+import TradeReview from './pages/trade/TradeReview';
 
 function App() {
   return (

@@ -28,7 +28,8 @@ enum TripMethod {
 }
 
 enum TradeStatus {
-  PENDING
+  PENDING_BUYER
+  PENDING_ADMIN
   COMPLETED
   REJECTED
 }
@@ -131,7 +132,7 @@ model Trade {
   pricePerCredit   Float
   totalPrice       Float       @default(0)      // optional computed = credits * pricePerCredit
   tradeDate        DateTime    @default(now())
-  status           TradeStatus @default(PENDING)
+  status           TradeStatus @default(PENDING_BUYER)
   // optional:
   expiresAt        DateTime?              // if you want offers to auto‑expire
   description      String?                // free‑form notes
