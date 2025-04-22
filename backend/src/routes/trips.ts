@@ -152,31 +152,27 @@ router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Pr
     }
   );
 
-  router.get('/employees/:id/trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
-      const me = await prisma.user.findUnique({ where: { email: req.email! }});
-      if (!me || me.role !== Role.EMPLOYER || !me.employerId) {
-        return res.status(403).json({ message: 'Forbidden' });
+  router.get('/my',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      // 1) Who is calling?
+      const me = await prisma.user.findUnique({
+        where: { email: req.email! }
+      })
+      if (!me) {
+        return res.status(404).json({ message: 'User not found' })
+      }
+      if (me.role !== Role.EMPLOYEE) {
+        return res.status(403).json({ message: 'Only employees can view their trips' })
       }
   
-      const employeeId = Number(req.params.id);
-      // verify employee exists and belongs to this employer
-      const employee = await prisma.user.findUnique({
-        where: { id: employeeId },
-        select: { employerId: true }
-      });
-      if (!employee || employee.employerId !== me.employerId) {
-        return res.status(404).json({ message: 'Employee not found' });
-      }
-  
-      // fetch trips
+      // 2) Fetch their trips
       const trips = await prisma.trip.findMany({
-        where: { userId: employeeId },
+        where: { userId: me.id },
         orderBy: { date: 'desc' },
         select: {
           id: true,
+          date: true,
           startLocation: true,
           endLocation: true,
-          date: true,
           distance: true,
           milesSaved: true,
           transportMode: true,
@@ -184,12 +180,12 @@ router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Pr
           duration: true,
           averageSpeed: true,
           maxSpeed: true,
-        }
-      });
+        },
+      })
   
-      return res.json({ trips });
+      return res.json({ trips })
     }
-  );
+  )
   
 
 export default router;

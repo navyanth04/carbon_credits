@@ -20,7 +20,7 @@ export default function EmployeeNavbar() {
 
   const tabs = [
     { to: '/employee-dashboard', label: 'Dashboard', Icon: HomeIcon },
-    { to: '/my-trips',           label: 'Trips',     Icon: ClipboardDocumentListIcon },
+    { to: '/employee/trips',     label: 'Trips',     Icon: ClipboardDocumentListIcon },
     { to: '/journey-tracker',    label: 'Travel',    Icon: MapPinIcon },
     { to: '/settings',           label: 'Settings',  Icon: Cog6ToothIcon },
   ];
