@@ -170,7 +170,7 @@ const JourneyTracker = () => {
     };
 
     try {
-      const response = await fetch('https://carbon-credits-backend.onrender.com/api/v1/trip/my-trip', {
+      const response = await fetch('https://carbon-credits-backend.onrender.com/api/v1/trip/trip', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

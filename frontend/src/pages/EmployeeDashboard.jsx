@@ -13,7 +13,7 @@ const EmployeeDashboard = () => {
       try {
         const token = localStorage.getItem('authToken');
         const res = await axios.get(
-          'https://carbon-credits-backend.onrender.com/api/v1/trip/my-trips',
+          'https://carbon-credits-backend.onrender.com/api/v1/trip/trips',
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTrips(res.data.trips);
