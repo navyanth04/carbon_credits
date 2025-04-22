@@ -109,7 +109,7 @@ interface CustomRequest extends Request {
 }
 
 // GET /api/v1/employer/trips
-router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+router.get('/org-trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
       // 1) Must be logged in
       if (!req.email) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -147,6 +147,39 @@ router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Pr
         return res.status(200).json({ trips });
       } catch (error) {
         console.error('Error retrieving employer trips:', error);
+        return res.status(500).json({ message: 'Error retrieving trips' });
+      }
+    }
+  );
+
+  router.get('/my-trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      // 1) Must be logged in
+      if (!req.email) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+  
+      // 2) Find the user
+      const me = await prisma.user.findUnique({
+        where: { email: req.email },
+      });
+      if (!me) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // 3) Only employees (or employers checking their own trips) should use this
+      if (me.role !== 'EMPLOYEE') {
+        return res.status(403).json({ message: 'Forbidden: not an employee' });
+      }
+  
+      try {
+        // 4) Fetch trips for this user
+        const trips = await prisma.trip.findMany({
+          where: { userId: me.id },
+          orderBy: { date: 'desc' },
+        });
+        return res.status(200).json({ trips });
+      } catch (error) {
+        console.error('Error retrieving trips:', error);
         return res.status(500).json({ message: 'Error retrieving trips' });
       }
     }

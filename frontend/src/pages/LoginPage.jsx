@@ -20,7 +20,9 @@ const LoginPage = () => {
         email, password
       });
       const token = response.data.token;
+      const role  =response.data.role;
       localStorage.setItem('authToken', token);
+      localStorage.setItem('role',role);
       navigate(
         response.data.role === 'ADMIN'
           ? '/admin'
