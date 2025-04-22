@@ -14,7 +14,6 @@ const tripSchema: ZodSchema = z.object({
   endLatitude: z.number().optional(),
   endLongitude: z.number().optional(),
   distance: z.number(),
-  title: z.string(),
   milesSaved: z.number(),
   transportMode: z.enum([
     "WALKING",
