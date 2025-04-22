@@ -11,7 +11,7 @@ export default function AllTripsPage() {
     async function load() {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get('https://carbon-credits-backend.vercel.app/api/v1/admin/trips', {
+        const res = await axios.get('https://carbon-credits-backend.onrender.com/api/v1/admin/trips', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTrips(res.data.trips || []);

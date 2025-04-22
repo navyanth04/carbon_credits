@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { authMiddleware } from '../middleware/middleware';
 
 const prisma = new PrismaClient();
@@ -149,6 +149,45 @@ router.get('/trips',authMiddleware,async (req: CustomRequest, res: Response): Pr
         console.error('Error retrieving employer trips:', error);
         return res.status(500).json({ message: 'Error retrieving trips' });
       }
+    }
+  );
+
+  router.get('/employees/:id/trips',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      const me = await prisma.user.findUnique({ where: { email: req.email! }});
+      if (!me || me.role !== Role.EMPLOYER || !me.employerId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+  
+      const employeeId = Number(req.params.id);
+      // verify employee exists and belongs to this employer
+      const employee = await prisma.user.findUnique({
+        where: { id: employeeId },
+        select: { employerId: true }
+      });
+      if (!employee || employee.employerId !== me.employerId) {
+        return res.status(404).json({ message: 'Employee not found' });
+      }
+  
+      // fetch trips
+      const trips = await prisma.trip.findMany({
+        where: { userId: employeeId },
+        orderBy: { date: 'desc' },
+        select: {
+          id: true,
+          startLocation: true,
+          endLocation: true,
+          date: true,
+          distance: true,
+          milesSaved: true,
+          transportMode: true,
+          credits: true,
+          duration: true,
+          averageSpeed: true,
+          maxSpeed: true,
+        }
+      });
+  
+      return res.json({ trips });
     }
   );
   
