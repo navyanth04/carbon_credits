@@ -6,15 +6,15 @@ export default function NewTrade() {
   const [employers, setEmployers] = useState([])
   const [balance,   setBalance]   = useState(0)
   const [toId,      setToId]      = useState('')
-  const [credits,   setCredits]   = useState(0)
-  const [price,     setPrice]     = useState(0)
+  const [credits,   setCredits]   = useState('')    // ← now a string
+  const [price,     setPrice]     = useState('')    // you might do the same for price
 
-  // 1) Fetch approved employers
+  // fetch other employers…
   useEffect(() => {
     (async () => {
       try {
         const { data } = await axios.get(
-          'https://carbon-credits-backend.onrender.com/api/v1/admin/employers/approved',
+          'https://carbon-credits-backend.onrender.com/api/v1/employer/others',
           { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
         )
         setEmployers(data.employers)
@@ -24,7 +24,7 @@ export default function NewTrade() {
     })()
   }, [])
 
-  // 2) Fetch my employer’s current credit balance
+  // fetch my balance…
   useEffect(() => {
     (async () => {
       try {
@@ -42,8 +42,23 @@ export default function NewTrade() {
   const submit = async (e) => {
     e.preventDefault()
 
-    if (credits > balance) {
+    const numCredits = Number(credits)
+    const numPrice   = Number(price)
+
+    if (!toId) {
+      alert('Please select a buyer')
+      return
+    }
+    if (!numCredits || numCredits < 1) {
+      alert('Enter a valid number of credits')
+      return
+    }
+    if (numCredits > balance) {
       alert(`You only have ${balance} credits to sell.`)
+      return
+    }
+    if (!numPrice || numPrice <= 0) {
+      alert('Enter a valid price per credit')
       return
     }
 
@@ -52,14 +67,16 @@ export default function NewTrade() {
         'https://carbon-credits-backend.onrender.com/api/v1/trades',
         {
           toEmployerId: Number(toId),
-          credits,
-          pricePerCredit: price,
+          credits:      numCredits,
+          pricePerCredit: numPrice,
         },
         { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
       )
       alert('Trade proposed!')
-      // refresh your balance:
-      setBalance((b) => b - credits)
+      setBalance(b => b - numCredits)
+      setCredits('')   // clear after submit
+      setPrice('')
+      setToId('')
     } catch (err) {
       console.error(err)
       alert(err.response?.data?.message || 'Could not propose trade.')
@@ -84,12 +101,12 @@ export default function NewTrade() {
         <label className="text-sm mb-1">Sell to…</label>
         <select
           value={toId}
-          onChange={(e) => setToId(e.target.value)}
+          onChange={e => setToId(e.target.value)}
           required
           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
         >
           <option value="">– Select Employer –</option>
-          {employers.map((o) => (
+          {employers.map(o => (
             <option key={o.id} value={o.id}>
               {o.name}
             </option>
@@ -104,7 +121,7 @@ export default function NewTrade() {
           min="1"
           max={balance}
           value={credits}
-          onChange={(e) => setCredits(Number(e.target.value))}
+          onChange={e => setCredits(e.target.value)}
           placeholder="Amount"
           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
         />
@@ -117,7 +134,7 @@ export default function NewTrade() {
           min="0.01"
           step="0.01"
           value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
+          onChange={e => setPrice(e.target.value)}
           placeholder="USD"
           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
         />
@@ -129,7 +146,7 @@ export default function NewTrade() {
                    bg-blue-600 hover:bg-blue-700 text-white font-semibold
                    rounded px-4 py-2 text-center
                    transition disabled:opacity-50"
-        disabled={!toId || credits <= 0 || credits > balance || price <= 0}
+        disabled={!toId || !credits || Number(credits) < 1 || Number(credits) > balance || Number(price) <= 0}
       >
         Submit
       </button>

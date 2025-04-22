@@ -22,7 +22,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import AdminWithSidebar from './layouts/AdminWithSidebar';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated';
 import NewTrade from './pages/trade/NewTrade';
-import MyTrades from './pages/trade/MyTrades';
+import TradesPage from './pages/trade/TradesPage';
 import TradeReview from './pages/trade/TradeReview';
 
 function App() {
@@ -114,10 +114,10 @@ function App() {
         />
 
         <Route 
-          path="/trades/my"    
+          path="/trades/all"    
           element={
             <RequireAuth>
-              <MyTrades/>
+              <TradesPage/>
             </RequireAuth>} 
         />
 

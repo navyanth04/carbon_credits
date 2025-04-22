@@ -1,38 +1,43 @@
 // src/routes/trades.ts
-import express from 'express';
-import { Response } from 'express';
-import { authMiddleware } from '../middleware/middleware';
-import CustomRequest from '../interfaces/interface';
+import express, { Response } from 'express';
+import { authMiddleware }   from '../middleware/middleware';
+import CustomRequest        from '../interfaces/interface';
 import { PrismaClient, TradeStatus } from '@prisma/client';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// 1) Propose a new trade (must be EMPLOYER)
-router.post('/',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
-      const { toEmployerId, credits, pricePerCredit, description } = req.body
-  
-      // 1) Must be EMPLOYER
-      const me = await prisma.user.findUnique({ where: { email: req.email! } })
-      if (!me || me.role !== 'EMPLOYER' || !me.employerId) {
-        return res.sendStatus(403)
-      }
-  
-      // 2) Check seller’s current credit balance
-      const seller = await prisma.employer.findUnique({
-        where: { id: me.employerId },
-        select: { credits: true }
-      })
-      if (!seller) {
-        return res.status(500).json({ message: 'Your employer record not found' })
-      }
-      if (credits > seller.credits) {
-        return res
-          .status(400)
-          .json({ message: `Insufficient credits: you only have ${seller.credits}` })
-      }
-  
-      // 3) All good → create a PENDING_ADMIN trade
+/**
+ * 1) Propose a new trade (EMPLOYER only)
+ *    - checks seller has enough credits
+ *    - creates trade in PENDING_BUYER state
+ */
+router.post(
+  '/',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const { toEmployerId, credits, pricePerCredit, description } = req.body;
+    const me = await prisma.user.findUnique({ where: { email: req.email! } });
+    if (!me || me.role !== 'EMPLOYER' || !me.employerId) {
+      return res.sendStatus(403);
+    }
+
+    // 2) Check seller’s carbon credits
+    const seller = await prisma.employer.findUnique({
+      where: { id: me.employerId },
+      select: { credits: true },
+    });
+    if (!seller) {
+      return res.status(500).json({ message: 'Seller record not found' });
+    }
+    if (credits > seller.credits) {
+      return res
+        .status(400)
+        .json({ message: `Insufficient credits: you have ${seller.credits}` });
+    }
+
+    // 3) Create trade awaiting buyer’s acceptance
+    try {
       const trade = await prisma.trade.create({
         data: {
           fromEmployerId: me.employerId,
@@ -41,134 +46,205 @@ router.post('/',authMiddleware,async (req: CustomRequest, res: Response): Promis
           pricePerCredit,
           totalPrice: credits * pricePerCredit,
           description,
-          status: TradeStatus.PENDING_ADMIN,
-        }
-      })
-  
-      return res.status(201).json({ trade })
+          status: TradeStatus.PENDING_BUYER,
+        },
+      });
+      return res.status(201).json({ trade });
+    } catch (err) {
+      console.error('Error creating trade:', err);
+      return res.status(500).json({ message: 'Server error' });
     }
-  )
-
-// 2) List my org’s incoming & outgoing trades
-router.get('/my', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-  const me = await prisma.user.findUnique({ where: { email: req.email! } });
-  if (!me) return res.sendStatus(404);
-
-  const trades = await prisma.trade.findMany({
-    where: {
-      OR: [
-        { fromEmployerId: me.employerId! },
-        { toEmployerId: me.employerId! },
-      ],
-    },
-    include: { fromEmployer: true, toEmployer: true },
-    orderBy: { tradeDate: 'desc' },
-  });
-
-  res.status(200).json({ trades });
-});
-
-// 3) Admin: list all pending trades
-router.get('/pending', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-  const me = await prisma.user.findUnique({ where: { email: req.email! } });
-  if (!me || me.role !== 'ADMIN') return res.sendStatus(403);
-
-  const trades = await prisma.trade.findMany({
-    where: { status: (TradeStatus.PENDING_ADMIN || TradeStatus.PENDING_BUYER) },
-    include: { fromEmployer: true, toEmployer: true },
-    orderBy: { tradeDate: 'asc' },
-  });
-
-  res.json({ trades });
-});
-
-// 4) Approve a trade (ADMIN only)
-router.patch('/:id/approve', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-  const me = await prisma.user.findUnique({ where: { email: req.email! } });
-  if (!me || me.role !== 'ADMIN') return res.sendStatus(403);
-
-  const tradeId = Number(req.params.id);
-
-  try {
-    const completedTrade = await prisma.$transaction(async (tx) => {
-      // a) mark the trade completed
-      const t = await tx.trade.update({
-        where: { id: tradeId },
-        data: { status: TradeStatus.COMPLETED },
-      });
-      // b) decrement seller’s credits
-      await tx.employer.update({
-        where: { id: t.fromEmployerId },
-        data: { credits: { decrement: t.credits } },
-      });
-      // c) increment buyer’s credits
-      await tx.employer.update({
-        where: { id: t.toEmployerId },
-        data: { credits: { increment: t.credits } },
-      });
-      return t;
-    });
-
-    return res.json({ trade: completedTrade });
-  } catch (err) {
-    console.error('Error approving trade:', err);
-    return res.status(500).json({ message: 'Server error' });
   }
-});
+);
 
-// 5) Reject a trade (ADMIN only)
-router.patch('/:id/reject', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-  const me = await prisma.user.findUnique({ where: { email: req.email! } });
-  if (!me || me.role !== 'ADMIN') return res.sendStatus(403);
-
-  const tradeId = Number(req.params.id);
-  try {
-    const rejectedTrade = await prisma.trade.update({
-      where: { id: tradeId },
-      data: { status: TradeStatus.REJECTED },
+/**
+ * 2) List my org’s trades (incoming & outgoing)
+ */
+router.get(
+  '/my',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const me = await prisma.user.findUnique({ where: { email: req.email! } });
+    if (!me || !me.employerId) {
+      return res.sendStatus(404);
+    }
+    const trades = await prisma.trade.findMany({
+      where: {
+        OR: [
+          { fromEmployerId: me.employerId },
+          { toEmployerId:   me.employerId },
+        ],
+      },
+      include: { fromEmployer: true, toEmployer: true },
+      orderBy: { tradeDate: 'desc' },
     });
-    return res.json({ trade: rejectedTrade });
-  } catch (err) {
-    console.error('Error rejecting trade:', err);
-    return res.status(500).json({ message: 'Server error' });
+    return res.json({ trades });
   }
-});
+);
 
-// PATCH /api/v1/trades/:id/respond
-router.patch('/:id/respond', authMiddleware, async (req: CustomRequest, res: Response): Promise<any> => {
-    const id        = Number(req.params.id);
-    const action    = req.body.action as 'accept' | 'reject';
-    const me        = await prisma.user.findUnique({ where:{email: req.email!} });
-    const trade     = await prisma.trade.findUnique({ where:{id} });
+/**
+ * 3) Buyer responds to a pending‑buyer trade
+ *    - must be the “toEmployer”
+ *    - must still be PENDING_BUYER
+ *    - if accept: check buyer has enough cashBalance → move to PENDING_ADMIN
+ */
+router.patch(
+  '/:id/respond',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const tradeId = Number(req.params.id);
+    const action  = req.body.action as 'accept' | 'reject';
 
-    if (!trade) {
-        // handle 404
-        return res.status(404).json({ message: 'Trade not found' });
-      }
-  
-    // 1) must be the “toEmployer”
-    if (!me || me.role!=='EMPLOYER' || me.employerId!==trade.toEmployerId)
+    const [me, trade] = await Promise.all([
+      prisma.user.findUnique({ where: { email: req.email! } }),
+      prisma.trade.findUnique({ where: { id: tradeId } }),
+    ]);
+    if (!me || me.role !== 'EMPLOYER' || !me.employerId) {
       return res.sendStatus(403);
-  
-    // 2) must still be awaiting buyer
-    if (trade.status!==TradeStatus.PENDING_BUYER)
-      return res.status(400).json({ message: 'Trade not awaiting buyer' });
-  
-    // 3) branch:
-    if (action==='accept') {
-      await prisma.trade.update({
-        where:{id},
-        data:{ status: TradeStatus.PENDING_ADMIN }
-      });
-      return res.json({ message:'Buyer accepted, now pending admin' });
-    } else {
-      await prisma.trade.update({
-        where:{id},
-        data:{ status: TradeStatus.REJECTED }
-      });
-      return res.json({ message:'Trade rejected by buyer' });
     }
-  });
-  
+    if (!trade) {
+      return res.status(404).json({ message: 'Trade not found' });
+    }
+    if (trade.toEmployerId !== me.employerId) {
+      return res.sendStatus(403);
+    }
+    if (trade.status !== TradeStatus.PENDING_BUYER) {
+      return res
+        .status(400)
+        .json({ message: 'Trade not awaiting buyer response' });
+    }
+
+    if (action === 'accept') {
+      // check buyer has enough cashBalance
+      const buyer = await prisma.employer.findUnique({
+        where: { id: me.employerId },
+        select: { cashBalance: true },
+      });
+      if (!buyer) {
+        return res.status(500).json({ message: 'Buyer record not found' });
+      }
+      if ((trade.totalPrice ?? 0) > buyer.cashBalance) {
+        return res
+          .status(400)
+          .json({ message: `Insufficient funds: you have $${buyer.cashBalance}` });
+      }
+
+      // move to admin approval
+      await prisma.trade.update({
+        where: { id: tradeId },
+        data: { status: TradeStatus.PENDING_ADMIN },
+      });
+      return res.json({ message: 'Trade accepted, pending admin approval' });
+    } else {
+      // buyer rejects
+      await prisma.trade.update({
+        where: { id: tradeId },
+        data: { status: TradeStatus.REJECTED },
+      });
+      return res.json({ message: 'Trade rejected by buyer' });
+    }
+  }
+);
+
+/**
+ * 4) Admin: list all trades pending admin approval
+ */
+router.get(
+  '/pending',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const me = await prisma.user.findUnique({ where: { email: req.email! } });
+    if (!me || me.role !== 'ADMIN') {
+      return res.sendStatus(403);
+    }
+    const trades = await prisma.trade.findMany({
+      where: { status: TradeStatus.PENDING_ADMIN },
+      include: { fromEmployer: true, toEmployer: true },
+      orderBy: { tradeDate: 'asc' },
+    });
+    return res.json({ trades });
+  }
+);
+
+/**
+ * 5) Admin approves a trade
+ *    - must be ADMIN
+ *    - in one transaction:
+ *       • mark trade COMPLETED
+ *       • debit seller credits, credit buyer credits
+ *       • debit buyer cashBalance,   credit seller cashBalance
+ */
+router.patch(
+  '/:id/approve',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const me = await prisma.user.findUnique({ where: { email: req.email! } });
+    if (!me || me.role !== 'ADMIN') {
+      return res.sendStatus(403);
+    }
+    const tradeId = Number(req.params.id);
+
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        // mark completed
+        const t = await tx.trade.update({
+          where: { id: tradeId },
+          data: { status: TradeStatus.COMPLETED },
+        });
+
+        // seller loses credits, gains cashBalance
+        await tx.employer.update({
+          where: { id: t.fromEmployerId },
+          data: {
+            credits: { decrement: t.credits },
+            cashBalance:   { increment: t.totalPrice },
+          },
+        });
+
+        // buyer gains credits, loses cashBalance
+        await tx.employer.update({
+          where: { id: t.toEmployerId },
+          data: {
+            credits: { increment: t.credits },
+            cashBalance:   { decrement: t.totalPrice },
+          },
+        });
+
+        return t;
+      });
+
+      return res.json({ trade: result });
+    } catch (err) {
+      console.error('Error approving trade:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
+/**
+ * 6) Admin rejects a trade outright
+ */
+router.patch(
+  '/:id/reject',
+  authMiddleware,
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    const me = await prisma.user.findUnique({ where: { email: req.email! } });
+    if (!me || me.role !== 'ADMIN') {
+      return res.sendStatus(403);
+    }
+    const tradeId = Number(req.params.id);
+
+    try {
+      const trade = await prisma.trade.update({
+        where: { id: tradeId },
+        data: { status: TradeStatus.REJECTED },
+      });
+      return res.json({ trade });
+    } catch (err) {
+      console.error('Error rejecting trade:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
 
 export default router;
