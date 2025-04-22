@@ -222,7 +222,42 @@ router.post('/employees/:id/reject', async (req: CustomRequest, res: Response):P
   return res.json({ message: 'Employee rejected' });
 });
 
+router.get('/others',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+    // 1) Must be logged in
+    if (!req.email) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
+    // 2) Look up requesting user
+    const me = await prisma.user.findUnique({
+      where: { email: req.email },
+    });
+    if (
+      !me ||
+      me.role !== 'EMPLOYER' ||      // only employers can call this
+      !me.employerId                  // ensure they actually belong to one
+    ) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    // 3) Find all other approved employers
+    const others = await prisma.employer.findMany({
+      where: {
+        id: { not: me.employerId },
+        approved: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return res.status(200).json({ employers: others });
+  }
+);
   
 
 export default router;
