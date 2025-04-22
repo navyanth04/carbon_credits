@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import EmployeeNavbar from '../components/EmployeeNavbar';
+import EmployeeNavbar from '../../components/EmployeeNavbar';
 
 const EmployeeDashboard = () => {
   const [trips, setTrips]     = useState([]);

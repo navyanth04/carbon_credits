@@ -43,7 +43,7 @@ export default function EmployerDetailPage() {
   if (!org) return <div className="p-6">{error || 'Loading…'}</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="m-8 space-y-4">
       <h2 className="text-2xl font-semibold">{org.name}</h2>
       <p><strong>Email:</strong> {org.email}</p>
       <p><strong>Joined:</strong> {new Date(org.createdAt).toLocaleDateString()}</p>

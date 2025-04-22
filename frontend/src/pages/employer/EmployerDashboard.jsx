@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
-import ProtectedLayout from '../components/ProtectedLayout';
-import Input from '../components/Input';
-import EmployerSidebar from '../components/sidebar/EmployerSidebar';
+import ProtectedLayout from '../../components/ProtectedLayout';
+import Input from '../../components/Input';
+import EmployerSidebar from '../../components/sidebar/EmployerSidebar';
 
 const EmployerDashboard = () => {
   const [searchParams] = useSearchParams();
