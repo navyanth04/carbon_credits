@@ -65,7 +65,42 @@ model User {
 
   // Each employee will have many Trips registered
   trips      Trip[]
+  rideSessionsHosted RideSession[]            @relation("Host")
+  rideParticipants   RideSessionParticipant[]
+  rideLocations        RideLocation[]
   @@index([employerId])
+}
+
+model RideSession {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique      // e.g. “ABCD1234”
+  hostId       Int
+  host         User      @relation("Host", fields: [hostId], references: [id])
+  createdAt    DateTime  @default(now())
+  endedAt      DateTime?
+  participants RideSessionParticipant[]
+  locations    RideLocation[]
+}
+
+model RideSessionParticipant {
+  id          Int          @id @default(autoincrement())
+  sessionId   Int
+  session     RideSession  @relation(fields: [sessionId], references: [id])
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  joinedAt    DateTime     @default(now())
+  @@unique([sessionId, userId], name: "sessionId_userId")
+}
+
+model RideLocation {
+  id          Int       @id @default(autoincrement())
+  sessionId   Int
+  session     RideSession  @relation(fields: [sessionId], references: [id])
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  timestamp   DateTime
+  lat         Float
+  lng         Float
 }
 
 model Employer {
