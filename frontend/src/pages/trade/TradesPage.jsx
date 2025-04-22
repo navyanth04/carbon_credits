@@ -1,61 +1,77 @@
 // src/pages/TradesPage.jsx
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function TradesPage() {
-  const [trades, setTrades]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
-  const [filter, setFilter]     = useState('ALL'); // ALL | INCOMING | OUTGOING
+  const [trades,    setTrades]    = useState([])
+  const [myEmpId,   setMyEmpId]   = useState<number|null>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState('')
+  const [filter,    setFilter]    = useState('ALL') // ALL | INCOMING | OUTGOING
 
-  // load all my trades
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await axios.get(
-          'https://carbon-credits-backend.onrender.com/api/v1/trades/my',
-          { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
-        );
-        setTrades(data.trades);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load trades.');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      setError('Not authenticated')
+      setLoading(false)
+      return
+    }
 
-  // accept/reject incoming
+    ;(async () => {
+      try {
+        // 1) fetch current employerId
+        const meRes = await axios.get(
+          'https://carbon-credits-backend.onrender.com/api/v1/employer/me',
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const empId = meRes.data.employerId
+        setMyEmpId(empId)
+
+        // 2) fetch all my trades
+        const trRes = await axios.get(
+          'https://carbon-credits-backend.onrender.com/api/v1/trades/my',
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        setTrades(trRes.data.trades)
+      } catch (err) {
+        console.error(err)
+        setError('Failed to load trades or employer info.')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
+
+  // accept/reject only incoming trades
   const handleResponse = async (id, action) => {
     try {
       await axios.patch(
         `https://carbon-credits-backend.onrender.com/api/v1/trades/${id}/respond`,
         { action },
         { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
-      );
-      setTrades(ts => ts.filter(t => t.id !== id));
+      )
+      setTrades(ts => ts.filter(t => t.id !== id))
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || 'Operation failed');
+      console.error(err)
+      alert(err.response?.data?.message || 'Operation failed')
     }
-  };
+  }
 
-  if (loading) return <div className="p-6 text-center">Loading trades…</div>;
-  if (error)   return <div className="p-6 text-center text-red-600">{error}</div>;
+  if (loading) return <div className="p-6 text-center">Loading…</div>
+  if (error)   return <div className="p-6 text-center text-red-600">{error}</div>
 
-  // filter client‑side
+  // client‑side filter
   const shown = trades.filter(t => {
-    if (filter === 'ALL')      return true;
-    if (filter === 'INCOMING') return t.status === 'PENDING_BUYER';
-    if (filter === 'OUTGOING') return t.status !== 'PENDING_BUYER';
-  });
+    if (filter === 'ALL')      return true
+    if (filter === 'INCOMING') return t.status === 'PENDING_BUYER' && t.toEmployer.id === myEmpId
+    if (filter === 'OUTGOING') return t.fromEmployer.id === myEmpId
+  })
 
   return (
     <div className="p-4 sm:p-6 md:max-w-3xl md:mx-auto">
       <h1 className="text-2xl font-semibold text-center mb-4">My Trades</h1>
 
-      {/* filter tabs */}
+      {/* filter */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
         {[
           { key: 'ALL',      label: 'All' },
@@ -82,7 +98,9 @@ export default function TradesPage() {
       ) : (
         <ul className="space-y-4">
           {shown.map(t => {
-            const isIncoming = t.status === 'PENDING_BUYER';
+            const isIncoming =
+              t.status === 'PENDING_BUYER' && t.toEmployer.id === myEmpId
+
             return (
               <li
                 key={t.id}
@@ -135,10 +153,10 @@ export default function TradesPage() {
                   </span>
                 )}
               </li>
-            );
+            )
           })}
         </ul>
       )}
     </div>
-  );
+  )
 }

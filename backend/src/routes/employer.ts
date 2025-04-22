@@ -280,6 +280,32 @@ router.get('/others',authMiddleware,async (req: CustomRequest, res: Response): P
     return res.status(200).json({ employers: others });
   }
 );
+
+router.get('/me',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+    // 1) Must be logged in:
+    if (!req.email) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    // 2) Find the User row:
+    const me = await prisma.user.findUnique({
+      where: { email: req.email },
+      select: { role: true, employerId: true }
+    })
+    if (!me) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // 3) Must be an EMPLOYER with an employerId:
+    if (me.role !== 'EMPLOYER' || !me.employerId) {
+      return res.status(403).json({ message: 'Forbidden: not an employer' })
+    }
+
+    // 4) Return just the employerId
+    return res.json({ employerId: me.employerId })
+  }
+)
+
   
 
 export default router;
