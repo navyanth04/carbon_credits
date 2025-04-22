@@ -14,7 +14,7 @@ export default function NewTrade() {
 
   const submit = async (e) => {
     e.preventDefault();
-    await axios.post('/api/v1/trades', {
+    await axios.post('https://carbon-credits-backend.onrender.com/api/v1/trades', {
       toEmployerId: Number(toId),
       credits,
       pricePerCredit: price
