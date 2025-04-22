@@ -13,7 +13,7 @@ const links = [
   { to: '/employer-dashboard', label: 'Dashboard',      Icon: HomeIcon                },
   { to: '/trades/all',         label: 'All Trades',     Icon: ArrowsRightLeftIcon, },
   { to: '/my-trips',           label: 'My Trips',       Icon: ClipboardDocumentListIcon },
-  { to: '/settings',           label: 'Settings',       Icon: Cog6ToothIcon          },
+  { to: '/employer/settings',           label: 'Settings',       Icon: Cog6ToothIcon          },
   { to: null,                  label: 'Logout',         Icon: ArrowRightStartOnRectangleIcon },
 ]
 

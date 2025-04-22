@@ -105,6 +105,7 @@ router.get('/summary',authMiddleware,async (req: CustomRequest, res: Response): 
         where: { id: me.employerId },
         select: {
           credits: true,
+          name: true,
           cashBalance:   true,  // your new cash field
         },
       });
@@ -132,6 +133,7 @@ router.get('/summary',authMiddleware,async (req: CustomRequest, res: Response): 
 
       // 4) Return everything
       return res.json({
+        name: org.name,
         totalCredits: org.credits,
         cashBalance:  org.cashBalance,
         activeCount,

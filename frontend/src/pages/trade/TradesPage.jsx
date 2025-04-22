@@ -1,6 +1,7 @@
 // src/pages/TradesPage.jsx
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import EmployerSidebar from '../../components/sidebar/EmployerSidebar'  // ← added
 
 export default function TradesPage() {
   const [trades,    setTrades]    = useState([])
@@ -68,95 +69,100 @@ export default function TradesPage() {
   })
 
   return (
-    <div className="p-4 sm:p-6 md:max-w-3xl md:mx-auto">
-      <h1 className="text-2xl font-semibold text-center mb-4">My Trades</h1>
+    // ← NEW: wrap in flex, sidebar on left / bottom
+    <div className="min-h-screen flex bg-gray-100 md:pb-0 pb-16">
+      <EmployerSidebar />
 
-      {/* filter */}
-      <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {[
-          { key: 'ALL',      label: 'All' },
-          { key: 'INCOMING', label: 'Incoming' },
-          { key: 'OUTGOING', label: 'Outgoing' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={
-              (filter === key
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700') +
-              ' px-4 py-2 rounded transition focus:outline-none focus:ring'
-            }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <main className="flex-1 p-4 sm:p-6 md:max-w-3xl md:mx-auto">
+        <h1 className="text-2xl font-semibold text-center mb-4">My Trades</h1>
 
-      {shown.length === 0 ? (
-        <p className="text-center text-gray-500">No trades to show.</p>
-      ) : (
-        <ul className="space-y-4">
-          {shown.map(t => {
-            const isIncoming =
-              t.status === 'PENDING_BUYER' && t.toEmployer.id === myEmpId
+        {/* filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          {[
+            { key: 'ALL',      label: 'All' },
+            { key: 'INCOMING', label: 'Incoming' },
+            { key: 'OUTGOING', label: 'Outgoing' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={
+                (filter === key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700') +
+                ' px-4 py-2 rounded transition focus:outline-none focus:ring'
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-            return (
-              <li
-                key={t.id}
-                className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center"
-              >
-                <div className="flex-1">
-                  {isIncoming ? (
-                    <p>
-                      <span className="font-medium">From:</span>{' '}
-                      {t.fromEmployer.name}
+        {shown.length === 0 ? (
+          <p className="text-center text-gray-500">No trades to show.</p>
+        ) : (
+          <ul className="space-y-4">
+            {shown.map(t => {
+              const isIncoming =
+                t.status === 'PENDING_BUYER' && t.toEmployer.id === myEmpId
+
+              return (
+                <li
+                  key={t.id}
+                  className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center"
+                >
+                  <div className="flex-1">
+                    {isIncoming ? (
+                      <p>
+                        <span className="font-medium">From:</span>{' '}
+                        {t.fromEmployer.name}
+                      </p>
+                    ) : (
+                      <p>
+                        <span className="font-medium">To:</span>{' '}
+                        {t.toEmployer.name}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 mt-1">
+                      {t.credits} credits @ ${t.pricePerCredit.toFixed(2)}
                     </p>
-                  ) : (
-                    <p>
-                      <span className="font-medium">To:</span>{' '}
-                      {t.toEmployer.name}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600 mt-1">
-                    {t.credits} credits @ ${t.pricePerCredit.toFixed(2)}
-                  </p>
-                </div>
-
-                {isIncoming ? (
-                  <div className="mt-4 flex space-x-2 sm:mt-0">
-                    <button
-                      onClick={() => handleResponse(t.id, 'accept')}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded transition"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => handleResponse(t.id, 'reject')}
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
-                    >
-                      Reject
-                    </button>
                   </div>
-                ) : (
-                  <span
-                    className={
-                      'inline-block px-3 py-1 rounded-full text-sm font-semibold ' +
-                      (t.status === 'COMPLETED'
-                        ? 'bg-green-100 text-green-800'
-                        : t.status === 'REJECTED'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800')
-                    }
-                  >
-                    {t.status.replace('_', ' ')}
-                  </span>
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      )}
+
+                  {isIncoming ? (
+                    <div className="mt-4 flex space-x-2 sm:mt-0">
+                      <button
+                        onClick={() => handleResponse(t.id, 'accept')}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded transition"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => handleResponse(t.id, 'reject')}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className={
+                        'inline-block px-3 py-1 rounded-full text-sm font-semibold ' +
+                        (t.status === 'COMPLETED'
+                          ? 'bg-green-100 text-green-800'
+                          : t.status === 'REJECTED'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800')
+                      }
+                    >
+                      {t.status.replace('_', ' ')}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </main>
     </div>
   )
 }

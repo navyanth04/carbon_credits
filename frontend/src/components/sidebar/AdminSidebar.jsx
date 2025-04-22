@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
   UserGroupIcon,
+  ArrowsRightLeftIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon
@@ -12,6 +13,7 @@ import {
 const links = [
   { to: '/admin',            label: 'Dashboard',         Icon: HomeIcon                 },
   { to: '/admin/employers',  label: 'Employers',         Icon: UserGroupIcon            },
+  { to: '/admin/trades',  label: 'Trades',               Icon: ArrowsRightLeftIcon           },
   { to: '/admin/trips',      label: 'Trips',             Icon: ClipboardDocumentListIcon },
   { to: '/admin/settings',   label: 'Settings',          Icon: Cog6ToothIcon            },
 ];
