@@ -73,10 +73,10 @@ const EmployeeDashboard = () => {
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm text-gray-500">Miles Saved</span>
+              {/* <span className="text-sm text-gray-500">Miles Saved</span>
               <span className="text-2xl sm:text-3xl font-bold">
                 {totalMiles.toFixed(2)}
-              </span>
+              </span> */}
             </div>
           </div>
         </section>
