@@ -247,4 +247,26 @@ router.patch(
   }
 );
 
+
+/**
+ * 0) Admin: list _all_ trades (any status)
+ */
+router.get('/all',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      // 1) must be ADMIN
+      const me = await prisma.user.findUnique({ where: { email: req.email! } })
+      if (!me || me.role !== 'ADMIN') {
+        return res.sendStatus(403)
+      }
+  
+      // 2) fetch every trade, include both sides
+      const trades = await prisma.trade.findMany({
+        include: { fromEmployer: true, toEmployer: true },
+        orderBy: { tradeDate: 'desc' },
+      })
+  
+      return res.json({ trades })
+    }
+  )
+  
+
 export default router;

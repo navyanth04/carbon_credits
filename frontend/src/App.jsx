@@ -24,6 +24,7 @@ import RedirectIfAuthenticated from './components/RedirectIfAuthenticated';
 import NewTrade from './pages/trade/NewTrade';
 import TradesPage from './pages/trade/TradesPage';
 import TradeReview from './pages/trade/TradeReview';
+import AdminTradesPage from './pages/admin/AdminTradesPage';
 
 function App() {
   return (
@@ -148,6 +149,8 @@ function App() {
           <Route path="trips"            element={<AllTripsPage />} />
           {/* /admin/settings → settings */}
           <Route path="settings"         element={<SettingsPage />} />
+          {/* /admin/trades → all trades */}
+          <Route path="trades"           element={<AdminTradesPage />}/>
           {/* catch any /admin/... typo back to dashboard */}
           <Route path="*"                element={<Navigate to="/admin" replace />} />
         </Route>

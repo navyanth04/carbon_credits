@@ -4,7 +4,7 @@ import axios from 'axios'
 
 export default function TradesPage() {
   const [trades,    setTrades]    = useState([])
-  const [myEmpId,   setMyEmpId]   = useState<number|null>(null)
+  const [myEmpId,   setMyEmpId]   = useState(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState('')
   const [filter,    setFilter]    = useState('ALL') // ALL | INCOMING | OUTGOING
