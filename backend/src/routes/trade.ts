@@ -45,7 +45,7 @@ router.get('/my', authMiddleware, async (req: CustomRequest, res: Response): Pro
     orderBy: { tradeDate: 'desc' },
   });
 
-  res.json({ trades });
+  res.status(200).json({ trades });
 });
 
 // 3) Admin: list all pending trades
