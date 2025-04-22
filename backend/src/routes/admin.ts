@@ -172,30 +172,47 @@ router.get('/employers/approved', async (req: CustomRequest, res: Response): Pro
     return res.json({ trips: payload });
   });
 
-  router.get('/employers/:id', async (req: CustomRequest, res: Response): Promise<any> => {
-    const id = Number(req.params.id);
-    const employer = await prisma.employer.findUnique({
-      where: { id },
-      include: {
-        // bring back any fields you need on the detail page:
-        employees: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            approved: true
-          }
-        }
+  router.get('/employers/:id',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+      // only ADMIN may fetch
+      const me = await prisma.user.findUnique({ where: { email: req.email! } })
+      if (!me || me.role !== Role.ADMIN) {
+        return res.sendStatus(403)
       }
-    });
   
-    if (!employer) {
-      return res.status(404).json({ message: 'Employer not found' });
+      const id = Number(req.params.id)
+      const employer = await prisma.employer.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          address: true,
+          phone: true,
+          contactName: true,
+          // <-- new money fields
+          credits: true,
+          cashBalance: true,
+          // employees list
+          employees: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              approved: true,
+            },
+          },
+        },
+      })
+  
+      if (!employer) {
+        return res.status(404).json({ message: 'Employer not found' })
+      }
+  
+      return res.json({ employer })
     }
-  
-    return res.json({ employer });
-  });
+  )
   
 
 export default router;

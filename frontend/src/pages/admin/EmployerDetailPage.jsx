@@ -1,52 +1,53 @@
-// src/pages/admin/EmployerDetailPage.jsx
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { useParams, useNavigate } from 'react-router-dom'
 
 export default function EmployerDetailPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [org, setOrg]       = useState(null);
-  const [error, setError]   = useState('');
+  const { id }     = useParams()
+  const navigate   = useNavigate()
+  const [org, setOrg]     = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     async function load() {
       try {
-        const token = localStorage.getItem('authToken');
-        const res = await axios.get(
+        const token = localStorage.getItem('authToken')
+        const res   = await axios.get(
           `https://carbon-credits-backend.onrender.com/api/v1/admin/employers/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setOrg(res.data.employer);
+        )
+        setOrg(res.data.employer)
       } catch (err) {
-        console.error(err);
-        setError('Unable to load employer.');
+        console.error(err)
+        setError('Unable to load employer.')
       }
     }
-    load();
-  }, [id]);
+    load()
+  }, [id])
 
   const toggleApproval = async (approve) => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken')
       await axios.post(
-        `https://carbon-credits-backend.onrender.com/api/v1/admin/employers/${id}/${approve ? 'approve' : 'reject'}`,
+        `https://carbon-credits-backend.onrender.com/api/v1/admin/employers/${id}/${
+          approve ? 'approve' : 'reject'
+        }`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
-      );
-      navigate('/admin/employers');
+      )
+      navigate('/admin/employers')
     } catch (err) {
-      console.error(err);
-      setError('Action failed.');
+      console.error(err)
+      setError('Action failed.')
     }
-  };
+  }
 
   if (!org) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100">
         <p className="text-gray-600">{error || 'Loading…'}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -69,6 +70,22 @@ export default function EmployerDetailPage() {
               {new Date(org.createdAt).toLocaleDateString()}
             </p>
           </div>
+
+          {/* newly added balances */}
+          <div>
+            <p className="text-sm font-semibold text-gray-500">Cash Balance</p>
+            <p className="text-gray-700">
+              ${org.cashBalance.toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-500">Carbon Credits</p>
+            <p className="text-gray-700">
+              {org.credits.toFixed(2)}
+            </p>
+          </div>
+
+          {/* optional address/phone/contact */}
           {org.address && (
             <div>
               <p className="text-sm font-semibold text-gray-500">Address</p>
@@ -114,12 +131,10 @@ export default function EmployerDetailPage() {
             )}
           </div>
           {error && (
-            <p className="mt-4 text-sm text-red-600">
-              {error}
-            </p>
+            <p className="mt-4 text-sm text-red-600">{error}</p>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
