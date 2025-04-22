@@ -11,11 +11,7 @@ const MyTripsPage = () => {
     const fetchTrips = async () => {
       try {
         const token    = localStorage.getItem('authToken');
-        const role     =localStorage.getItem('role');
-        let x        = 'my';
-        if(role==='EMPLOYER')x='org';
-        if(role==='ADMIN')x='all';
-        const response = await fetch(`https://carbon-credits-backend.onrender.com/api/v1/trip/${x}-trips`, {
+        const response = await fetch('https://carbon-credits-backend.onrender.com/api/v1/trip/trips', {
           headers: {
             'Content-Type':  'application/json',
             'Authorization': `Bearer ${token}`,
