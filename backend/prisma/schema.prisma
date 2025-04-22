@@ -74,6 +74,7 @@ model Employer {
   createdAt    DateTime  @default(now())
 
   credits      Float     @default(0)
+  cashBalance  Float     @default(100)
   
   // Optional extra fields
   address      String?                 // company address
@@ -121,17 +122,20 @@ model Trip {
 
 
 model Trade {
-  id             Int         @id @default(autoincrement())
-  // The employer initiating the trade (selling credits)
-  fromEmployer   Employer    @relation("TradeFrom", fields: [fromEmployerId], references: [id])
-  fromEmployerId Int
-  // The employer receiving credits (buying)
-  toEmployer     Employer    @relation("TradeTo", fields: [toEmployerId], references: [id])
-  toEmployerId   Int
-  // Amount of carbon credits traded
-  credits        Float
-  // Price per credit for the trade (or total price if you prefer)
-  pricePerCredit Float
-  tradeDate      DateTime    @default(now())
-  status         TradeStatus @default(PENDING)
+  id               Int         @id @default(autoincrement())
+  fromEmployer     Employer    @relation("TradeFrom", fields: [fromEmployerId], references: [id])
+  fromEmployerId   Int
+  toEmployer       Employer    @relation("TradeTo",   fields: [toEmployerId],   references: [id])
+  toEmployerId     Int
+  credits          Float
+  pricePerCredit   Float
+  totalPrice       Float       @default(0)      // optional computed = credits * pricePerCredit
+  tradeDate        DateTime    @default(now())
+  status           TradeStatus @default(PENDING)
+  // optional:
+  expiresAt        DateTime?              // if you want offers to auto‑expire
+  description      String?                // free‑form notes
+  @@index([fromEmployerId])
+  @@index([toEmployerId])
+  @@index([status])
 }

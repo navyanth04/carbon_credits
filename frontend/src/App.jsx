@@ -101,6 +101,33 @@ function App() {
             </RequireAuth>
           }
         />
+        {/* Trades */}
+        <Route 
+          path="/trades/new"   
+          element={
+            <RequireAuth>
+              <NewTrade/>
+            </RequireAuth>} 
+        />
+
+        <Route 
+          path="/trades/my"    
+          element={
+            <RequireAuth>
+              <MyTrades/>
+            </RequireAuth>} 
+        />
+
+        <Route 
+          path="/trades/review"
+          element={
+            <RequireAuth requiredRole="ADMIN">
+              <TradeReview/>
+            </RequireAuth>} 
+        />
+
+        {/* admin */}
+
         <Route path="/admin/*" element={
           <RequireAuth requiredRole="ADMIN">
             <AdminWithSidebar>
