@@ -58,7 +58,10 @@ model User {
   employerId Int?
   employer   Employer? @relation(fields: [employerId], references: [id])
 
-  credits     Float      @default(0)
+  credits      Float      @default(0)
+  address      String?                 // company address
+  phone        String?                 // contact number
+  contactName  String?                 // primary contact person
 
   // Each employee will have many Trips registered
   trips      Trip[]
@@ -95,6 +98,7 @@ model Trip {
   userId         Int
   startLocation  String
   endLocation    String
+  title          String      @default("Trip")
   // Precise coordinates for the start of the trip
   startLatitude  Float
   startLongitude Float

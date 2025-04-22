@@ -27,6 +27,7 @@ import TradeReview from './pages/trade/TradeReview';
 import AdminTradesPage from './pages/admin/AdminTradesPage';
 import EmployerSettingsPage from './pages/employer/EmployerSettingsPage';
 import EmployeeTripsPage from './pages/employee/EmployeeTripsPage';
+import EmployeeSettingsPage from './pages/employee/EmployeeSettingsPage';
 
 function App() {
   return (
@@ -68,6 +69,14 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="/employee/settings"
+          element={
+            <RequireAuth requiredRole={"EMPLOYEe"}>
+              <EmployeeSettingsPage />
+            </RequireAuth>
+          }
+        />        
         <Route
           path="/trading"
           element={

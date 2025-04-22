@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
-import EmployeeNavbar from '../../components/EmployeeNavbar';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import EmployeeNavbar from "../../components/EmployeeNavbar";
 
 const EmployeeDashboard = () => {
-  const [trips, setTrips]     = useState([]);
+  const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem("authToken");
         const res = await axios.get(
-          'https://carbon-credits-backend.onrender.com/api/v1/trip/trips',
+          "https://carbon-credits-backend.onrender.com/api/v1/trip/my",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTrips(res.data.trips);
       } catch (err) {
         console.error(err);
-        setError('Failed to load your trips.');
+        setError("Failed to load your trips.");
       } finally {
         setLoading(false);
       }
@@ -32,10 +32,7 @@ const EmployeeDashboard = () => {
     (sum, t) => sum + (t.credits ?? t.points ?? 0),
     0
   );
-  const totalMiles   = trips.reduce(
-    (sum, t) => sum + (t.milesSaved ?? 0),
-    0
-  );
+  const totalMiles = trips.reduce((sum, t) => sum + (t.milesSaved ?? 0), 0);
 
   const recentTrips = trips.slice(0, 3);
 
@@ -44,14 +41,14 @@ const EmployeeDashboard = () => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <p className="text-gray-600">Loading your data…</p>
       </div>
-    )
+    );
   }
   if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <p className="text-red-600">{error}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -106,10 +103,10 @@ const EmployeeDashboard = () => {
                     {t.startLocation} → {t.endLocation}
                   </p>
                   <div className="mt-2 flex flex-col sm:flex-row sm:space-x-6 text-sm text-gray-600">
-                    <span>Credits: {(t.credits ?? t.points ?? 0).toFixed(2)}</span>
                     <span>
-                      Miles Saved: {t.milesSaved.toFixed(2)}
+                      Credits: {(t.credits ?? t.points ?? 0).toFixed(2)}
                     </span>
+                    <span>Miles Saved: {t.milesSaved.toFixed(2)}</span>
                   </div>
                 </li>
               ))}
@@ -117,7 +114,7 @@ const EmployeeDashboard = () => {
           )}
 
           <Link
-            to="/my-trips"
+            to="/employee/trips"
             className="mt-4 inline-block text-green-600 hover:underline text-sm"
           >
             View All Trips →

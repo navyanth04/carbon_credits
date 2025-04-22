@@ -22,7 +22,7 @@ export default function EmployeeNavbar() {
     { to: '/employee-dashboard', label: 'Dashboard', Icon: HomeIcon },
     { to: '/employee/trips',     label: 'Trips',     Icon: ClipboardDocumentListIcon },
     { to: '/journey-tracker',    label: 'Travel',    Icon: MapPinIcon },
-    { to: '/settings',           label: 'Settings',  Icon: Cog6ToothIcon },
+    { to: '/employee/settings',           label: 'Settings',  Icon: Cog6ToothIcon },
   ];
 
   return (
