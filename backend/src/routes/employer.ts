@@ -90,37 +90,59 @@ router.get('/list', async (req, res) => {
 router.use(authMiddleware);
 
 // GET /api/v1/employer/summary
-router.get('/summary', async (req: CustomRequest, res: Response): Promise<any> => {
-  // 1) Find the logged‑in user, ensure they're an EMPLOYER
-  const me = await prisma.user.findUnique({ where: { email: req.email }});
-  if (!me || me.role !== 'EMPLOYER' || !me.employerId) {
-    return res.status(403).json({ message: 'Forbidden' });
+router.get('/summary',authMiddleware,async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+      // 1) Must be logged in as EMPLOYER
+      const me = await prisma.user.findUnique({
+        where: { email: req.email! },
+      });
+      if (!me || me.role !== 'EMPLOYER' || !me.employerId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      // 2) Pull only the bits we need from the employer record
+      const org = await prisma.employer.findUnique({
+        where: { id: me.employerId },
+        select: {
+          credits: true,
+          cashBalance:   true,  // your new cash field
+        },
+      });
+      if (!org) {
+        return res.status(404).json({ message: 'Organization not found' });
+      }
+
+      // 3) Count approved vs pending employees
+      const [activeCount, pendingCount] = await Promise.all([
+        prisma.user.count({
+          where: {
+            employerId: me.employerId,
+            role:       'EMPLOYEE',
+            approved:   true,
+          },
+        }),
+        prisma.user.count({
+          where: {
+            employerId: me.employerId,
+            role:       'EMPLOYEE',
+            approved:   false,
+          },
+        }),
+      ]);
+
+      // 4) Return everything
+      return res.json({
+        totalCredits: org.credits,
+        cashBalance:  org.cashBalance,
+        activeCount,
+        pendingCount,
+      });
+    } catch (err) {
+      console.error('Error in summary:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
   }
-
-  // 2) Fetch their org record
-  const org = await prisma.employer.findUnique({
-    where: { id: me.employerId },
-  });
-  if (!org) {
-    return res.status(404).json({ message: 'Organization not found' });
-  }
-
-  // 3) Count active vs pending employees
-  const [activeCount, pendingCount] = await Promise.all([
-    prisma.user.count({
-      where: { employerId: org.id, approved: true, role: 'EMPLOYEE' },
-    }),
-    prisma.user.count({
-      where: { employerId: org.id, approved: false, role: 'EMPLOYEE' },
-    }),
-  ]);
-
-  return res.json({
-    totalCredits: org.credits,
-    activeCount,
-    pendingCount,
-  });
-});
+);
 
 // GET /api/v1/employer/employees
 router.get('/employees', async (req: CustomRequest, res: Response): Promise<any> => {

@@ -102,7 +102,7 @@ export default function EmployerDashboard() {
 
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-            <Link to="/trading">
+            <Link to="/trades/new">
               <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
                 Propose Trade
               </button>

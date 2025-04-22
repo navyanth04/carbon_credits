@@ -3,7 +3,7 @@ import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   HomeIcon,
-  MapPinIcon,
+  ArrowsRightLeftIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon
@@ -11,7 +11,7 @@ import {
 
 const links = [
   { to: '/employer-dashboard', label: 'Dashboard',      Icon: HomeIcon                },
-  { to: '/journey-tracker',    label: 'Journey Tracker',Icon: MapPinIcon             },
+  { to: '/trades/all',         label: 'All Trades',     Icon: ArrowsRightLeftIcon, },
   { to: '/my-trips',           label: 'My Trips',       Icon: ClipboardDocumentListIcon },
   { to: '/settings',           label: 'Settings',       Icon: Cog6ToothIcon          },
   { to: null,                  label: 'Logout',         Icon: ArrowRightStartOnRectangleIcon },

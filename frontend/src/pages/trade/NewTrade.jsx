@@ -1,87 +1,82 @@
 // src/components/NewTrade.jsx
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function NewTrade() {
-  const [employers, setEmployers] = useState([])
-  const [balance,   setBalance]   = useState(0)
-  const [toId,      setToId]      = useState('')
-  const [credits,   setCredits]   = useState('')    // ← now a string
-  const [price,     setPrice]     = useState('')    // you might do the same for price
+  const [employers,    setEmployers]    = useState([]);
+  const [carbonBalance, setCarbonBalance] = useState(0);
+  const [cashBalance,   setCashBalance]   = useState(0);
+  const [toId,          setToId]          = useState('');
+  const [credits,       setCredits]       = useState('');
+  const [price,         setPrice]         = useState('');
 
-  // fetch other employers…
+  // 1) fetch other employers
   useEffect(() => {
     (async () => {
       try {
         const { data } = await axios.get(
           'https://carbon-credits-backend.onrender.com/api/v1/employer/others',
           { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
-        )
-        setEmployers(data.employers)
+        );
+        setEmployers(data.employers);
       } catch (err) {
-        console.error(err)
+        console.error('Failed loading other employers', err);
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
-  // fetch my balance…
+  // 2) fetch my balances
   useEffect(() => {
     (async () => {
       try {
         const { data } = await axios.get(
           'https://carbon-credits-backend.onrender.com/api/v1/employer/summary',
           { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
-        )
-        setBalance(data.totalCredits)
+        );
+        setCarbonBalance(data.totalCredits);
+        setCashBalance(data.cashBalance);
       } catch (err) {
-        console.error('Failed loading my balance', err)
+        console.error('Failed loading my summary', err);
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   const submit = async (e) => {
-    e.preventDefault()
-
-    const numCredits = Number(credits)
-    const numPrice   = Number(price)
+    e.preventDefault();
+    const numCredits = Number(credits);
+    const numPrice   = Number(price);
 
     if (!toId) {
-      alert('Please select a buyer')
-      return
+      return alert('Please select a buyer');
     }
     if (!numCredits || numCredits < 1) {
-      alert('Enter a valid number of credits')
-      return
+      return alert('Enter a valid number of credits');
     }
-    if (numCredits > balance) {
-      alert(`You only have ${balance} credits to sell.`)
-      return
+    if (numCredits > carbonBalance) {
+      return alert(`Insufficient carbon credits: you have ${carbonBalance}`);
     }
     if (!numPrice || numPrice <= 0) {
-      alert('Enter a valid price per credit')
-      return
+      return alert('Enter a valid price per credit');
     }
 
     try {
       await axios.post(
         'https://carbon-credits-backend.onrender.com/api/v1/trades',
-        {
-          toEmployerId: Number(toId),
-          credits:      numCredits,
-          pricePerCredit: numPrice,
-        },
+        { toEmployerId: Number(toId), credits: numCredits, pricePerCredit: numPrice },
         { headers: { Authorization: `Bearer ${localStorage.authToken}` } }
-      )
-      alert('Trade proposed!')
-      setBalance(b => b - numCredits)
-      setCredits('')   // clear after submit
-      setPrice('')
-      setToId('')
+      );
+      alert('Trade proposed!');
+      // update displayed balances immediately
+      setCarbonBalance(c => c - numCredits);
+      setCashBalance(c => c + numCredits * numPrice);
+      setToId('');
+      setCredits('');
+      setPrice('');
     } catch (err) {
-      console.error(err)
-      alert(err.response?.data?.message || 'Could not propose trade.')
+      console.error('Trade submission failed', err);
+      alert(err.response?.data?.message || 'Could not propose trade.');
     }
-  }
+  };
 
   return (
     <form
@@ -94,7 +89,8 @@ export default function NewTrade() {
       <h2 className="col-span-full text-xl font-semibold">Propose Trade</h2>
 
       <p className="col-span-full text-sm text-gray-600">
-        Your available credits: <strong>{balance}</strong>
+        Carbon Credits: <strong>{carbonBalance.toFixed(2)}</strong> • 
+        Cash Balance: <strong>${cashBalance.toFixed(2)}</strong>
       </p>
 
       <div className="flex flex-col">
@@ -119,7 +115,7 @@ export default function NewTrade() {
         <input
           type="number"
           min="1"
-          max={balance}
+          max={carbonBalance}
           value={credits}
           onChange={e => setCredits(e.target.value)}
           placeholder="Amount"
@@ -142,14 +138,20 @@ export default function NewTrade() {
 
       <button
         type="submit"
+        disabled={
+          !toId ||
+          !credits ||
+          Number(credits) < 1 ||
+          Number(credits) > carbonBalance ||
+          Number(price) <= 0
+        }
         className="col-span-full md:col-span-2
                    bg-blue-600 hover:bg-blue-700 text-white font-semibold
                    rounded px-4 py-2 text-center
                    transition disabled:opacity-50"
-        disabled={!toId || !credits || Number(credits) < 1 || Number(credits) > balance || Number(price) <= 0}
       >
         Submit
       </button>
     </form>
-  )
+  );
 }
