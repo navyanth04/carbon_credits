@@ -1,58 +1,98 @@
 // src/components/EmployerSidebar.jsx
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import {
+  HomeIcon,
+  MapPinIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  ArrowRightStartOnRectangleIcon
+} from '@heroicons/react/24/outline'
 
 const links = [
-  { to: '/employer-dashboard',   label: 'Dashboard'       },
-  { to: '/journey-tracker',      label: 'Journey Tracker' },
-  { to: '/my-trips',             label: 'My Trips'        },
-  { to: '/settings',             label: 'Settings'        },
-  // no `to` for logout — we’ll handle it specially
-  { to: null,                    label: 'Logout'          },
-];
+  { to: '/employer-dashboard', label: 'Dashboard',      Icon: HomeIcon                },
+  { to: '/journey-tracker',    label: 'Journey Tracker',Icon: MapPinIcon             },
+  { to: '/my-trips',           label: 'My Trips',       Icon: ClipboardDocumentListIcon },
+  { to: '/settings',           label: 'Settings',       Icon: Cog6ToothIcon          },
+  { to: null,                  label: 'Logout',         Icon: ArrowRightStartOnRectangleIcon },
+]
 
 export default function EmployerSidebar() {
-  const { pathname } = useLocation();
-  const navigate     = useNavigate();
+  const { pathname } = useLocation()
+  const navigate     = useNavigate()
 
   const handleLogout = () => {
-    // 1) clear your token (and any other app state)
-    localStorage.removeItem('authToken');
-    // 2) force a re‑render / redirect
-    //    a) either reload the page so RequireAuth will send you to /login
-    // window.location.reload();
-    //    b) or navigate explicitly:
-    navigate('/login', { replace: true });
-  };
+    localStorage.removeItem('authToken')
+    navigate('/login', { replace: true })
+  }
 
   return (
-    <aside className="w-56 bg-green-800 text-white flex-shrink-0 min-h-screen flex flex-col p-6 space-y-4">
-      {links.map(({ to, label }) => {
-        const active = to === pathname;
-        if (!to) {
-          // logout button
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex md:flex-col w-56 bg-green-800 text-white min-h-screen p-6 space-y-4">
+        {links.map(({ to, label, Icon }) => {
+          if (!to) {
+            return (
+              <button
+                key={label}
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 rounded hover:bg-green-700 transition"
+              >
+                <Icon className="h-5 w-5 mr-2" />
+                {label}
+              </button>
+            )
+          }
+          const active = pathname === to
           return (
-            <button
-              key={label}
-              onClick={handleLogout}
-              className="text-left px-4 py-2 rounded hover:bg-green-700 transition-colors"
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center px-4 py-2 rounded transition ${
+                active
+                  ? 'bg-green-600 font-semibold'
+                  : 'hover:bg-green-700'
+              }`}
             >
+              <Icon className="h-5 w-5 mr-2" />
               {label}
-            </button>
-          );
-        }
-        return (
-          <Link
-            key={to}
-            to={to}
-            className={`px-4 py-2 rounded transition-colors ${
-              active ? 'bg-green-600' : 'hover:bg-green-700'
-            }`}
-          >
-            {label}
-          </Link>
-        );
-      })}
-    </aside>
-  );
+            </Link>
+          )
+        })}
+      </aside>
+
+      {/* Mobile bottom bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-green-800 text-white flex md:hidden">
+        {links.map(({ to, label, Icon }) => {
+          if (!to) {
+            return (
+              <button
+                key={label}
+                onClick={handleLogout}
+                className="flex-1 py-2 flex flex-col items-center justify-center border-l last:border-r"
+              >
+                <Icon className="h-6 w-6" />
+                <span className="text-xs">{label}</span>
+              </button>
+            )
+          }
+          const active = pathname === to
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={`flex-1 py-2 flex flex-col items-center justify-center transition ${
+                active
+                  ? 'bg-green-700'
+                  : 'hover:bg-green-700'
+              }`}
+            >
+              <Icon className="h-6 w-6" />
+              <span className="text-xs">{label}</span>
+            </Link>
+          )
+        })}
+      </nav>
+    </>
+  )
 }

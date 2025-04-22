@@ -191,104 +191,100 @@ const JourneyTracker = () => {
   };
 
   return (
-    <div className=" mx-auto p-6 bg-gray-100 min-h-screen">
-      <EmployeeNavbar/>
-      <h1 className="text-4xl mt-8 font-extrabold text-center mb-6 text-gray-800">
-        Journey Tracker
-      </h1>
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      <EmployeeNavbar />
 
-      <div className="flex justify-center mb-6 space-x-4">
-        <button
-          onClick={startJourney}
-          disabled={tracking}
-          className="px-6 py-3 bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg shadow-md disabled:opacity-50"
-        >
-          Start Journey
-        </button>
-        <button
-          onClick={endJourney}
-          disabled={!tracking}
-          className="px-6 py-3 bg-red-500 hover:bg-red-600 transition-colors text-white rounded-lg shadow-md disabled:opacity-50"
-        >
-          End Journey
-        </button>
-      </div>
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
+          Journey Tracker
+        </h1>
 
-      {/* Live Metrics or Trip Summary */}
-      {!journeyEnded ? (
-        <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4">Live Metrics</h2>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Speed:</span> {speed ? mpsToMph(speed).toFixed(2) : 0} MPH
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Distance:</span> {metersToMiles(totalDistance).toFixed(2)} miles
-          </p>
-          {currentMarker && (
-            <p className="text-lg text-gray-600">
-              <span className="font-semibold">Current Position:</span> {currentMarker.lat.toFixed(4)}, {currentMarker.lng.toFixed(4)}
-            </p>
-          )}
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Max Speed:</span> {maxSpeed ? mpsToMph(maxSpeed).toFixed(2) : 0} MPH
-          </p>
+        {/* controls */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+          <button
+            onClick={startJourney}
+            disabled={tracking}
+            className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded"
+          >
+            Start Journey
+          </button>
+          <button
+            onClick={endJourney}
+            disabled={!tracking}
+            className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded"
+          >
+            End Journey
+          </button>
         </div>
-      ) : (
-        <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4">Trip Summary</h2>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Total Distance:</span> {metersToMiles(totalDistance).toFixed(2)} miles
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Last Speed:</span> {speed ? mpsToMph(speed).toFixed(2) : 0} MPH
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Max Speed:</span> {maxSpeed ? mpsToMph(maxSpeed).toFixed(2) : 0} MPH
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Duration:</span> {duration.toFixed(2)} seconds
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Average Speed:</span> {averageSpeed ? mpsToMph(averageSpeed).toFixed(2) : 0} MPH
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">Start Location:</span> {startAddress || 'Loading...'}
-          </p>
-          <p className="text-lg text-gray-600">
-            <span className="font-semibold">End Location:</span> {endAddress || 'Loading...'}
-          </p>
-          <div className="mt-4 flex justify-center">
+
+        {/* metrics */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-xl mx-auto mb-6">
+          {!journeyEnded ? (
+            <>
+              <section className="bg-white p-4 rounded shadow">
+                <h2 className="font-semibold mb-2">Live Metrics</h2>
+                <p>Speed: {(mpsToMph(speed)).toFixed(1)} MPH</p>
+                <p>Distance: {metersToMiles(totalDistance).toFixed(2)} mi</p>
+                {currentMarker && (
+                  <p>
+                    Pos: {currentMarker.lat.toFixed(4)}, {currentMarker.lng.toFixed(4)}
+                  </p>
+                )}
+                <p>Max Speed: {mpsToMph(maxSpeed).toFixed(1)} MPH</p>
+              </section>
+            </>
+          ) : (
+            <>
+              <section className="bg-white p-4 rounded shadow">
+                <h2 className="font-semibold mb-2">Trip Summary</h2>
+                <p>Total Distance: {metersToMiles(totalDistance).toFixed(2)} mi</p>
+                <p>Duration: {duration.toFixed(1)} s</p>
+                <p>Avg Speed: {mpsToMph(averageSpeed).toFixed(1)} MPH</p>
+                <p>Start: {startAddress}</p>
+                <p>End: {endAddress}</p>
+              </section>
+            </>
+          )}
+        </div>
+
+        {journeyEnded && (
+          <div className="text-center mb-6">
             <button
               onClick={submitTrip}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 transition-colors text-white rounded-lg shadow-md"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded"
             >
               Submit Trip
             </button>
+            {submissionStatus && (
+              <p className="mt-2 text-sm text-gray-700">{submissionStatus}</p>
+            )}
           </div>
-          {submissionStatus && (
-            <p className="text-center text-lg text-gray-700 mt-4">{submissionStatus}</p>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* Map Container */}
-      {positions.length > 0 && (
-        <div className="max-w-4xl mx-auto rounded-lg overflow-hidden shadow-lg">
-          <MapContainer
-            center={[currentMarker.lat, currentMarker.lng]}
-            zoom={13}
-            style={{ height: '400px', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {startMarker && <Marker position={[startMarker.lat, startMarker.lng]} />}
-            {currentMarker && <Marker position={[currentMarker.lat, currentMarker.lng]} />}
-            <Polyline positions={positions.map((p) => [p.lat, p.lng])} color="blue" />
-          </MapContainer>
-        </div>
-      )}
+        {/* map */}
+        {positions.length > 0 && (
+          <div className="w-full h-64 sm:h-80 md:h-96 rounded overflow-hidden shadow">
+            <MapContainer
+              center={[currentMarker.lat, currentMarker.lng]}
+              zoom={13}
+              className="w-full h-full"
+            >
+              <TileLayer
+                attribution='&copy; OSM'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {startMarker && <Marker position={[startMarker.lat, startMarker.lng]} />}
+              {currentMarker && (
+                <Marker position={[currentMarker.lat, currentMarker.lng]} />
+              )}
+              <Polyline
+                positions={positions.map(p => [p.lat, p.lng])}
+                color="blue"
+              />
+            </MapContainer>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

@@ -16,53 +16,49 @@ const LoginPage = () => {
     e.preventDefault();
     setErrMsg('');
     try {
-      const response = await axios.post('https://carbon-credits-backend.onrender.com/api/v1/auth/login', {
-        email, password
-      });
-      const token = response.data.token;
-      const role  =response.data.role;
+      const response = await axios.post(
+        'https://carbon-credits-backend.onrender.com/api/v1/auth/login',
+        { email, password }
+      );
+      const { token, role } = response.data;
       localStorage.setItem('authToken', token);
-      localStorage.setItem('role',role);
+      localStorage.setItem('role', role);
       navigate(
-        response.data.role === 'ADMIN'
+        role === 'ADMIN'
           ? '/admin'
-          : response.data.role === 'EMPLOYER'
+          : role === 'EMPLOYER'
             ? '/employer-dashboard'
             : '/employee-dashboard'
       );
     } catch (error) {
       console.error(error);
-      if (axios.isAxiosError(error) && error.response?.data?.message) {
-        setErrMsg(error.response.data.message);
-      } else {
-        setErrMsg('An unexpected error occurred. Please try again.');
-      }
+      const msg =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : 'An unexpected error occurred. Please try again.';
+      setErrMsg(msg);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 px-4 py-6">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-4 sm:p-6">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Login
         </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-5">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="mb-5">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <Button
             type="submit"
             className="w-full bg-blue-600 text-white hover:bg-blue-700 shadow-md"
@@ -71,11 +67,10 @@ const LoginPage = () => {
           </Button>
           {errMsg && (
             <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4"
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mt-2 text-sm"
               role="alert"
             >
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">{errMsg}</span>
+              {errMsg}
             </div>
           )}
         </form>
@@ -92,8 +87,8 @@ const LoginPage = () => {
       </div>
 
       {showSignupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
             <button
               onClick={() => setShowSignupModal(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl leading-none"
